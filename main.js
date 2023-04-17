@@ -144,7 +144,7 @@ var background_toggle = false;
 
 var controller;
 
-var renderer = new THREE.WebGLRenderer({antialias: true, alpha: true, preserveDrawingBuffer: true});
+var renderer = new THREE.WebGLRenderer({antialias: false, alpha: true, preserveDrawingBuffer: true}); //antialias: true
 const composer = new THREE.EffectComposer( renderer );
 let snap = false;
 let quality = 0;
@@ -268,6 +268,11 @@ function View(viewArea) {
   const renderPass = new THREE.RenderPass(this.scene, this.camera);
   this.composer.addPass( renderPass );
 
+  // FXAA antialiasing
+  const effectFXAA = new THREE.ShaderPass( THREE.FXAAShader );
+  effectFXAA.uniforms[ 'resolution' ].value.x = 1 / ( window.innerWidth * window.devicePixelRatio );
+  effectFXAA.uniforms[ 'resolution' ].value.y = 1 / ( window.innerHeight * window.devicePixelRatio );
+  this.composer.addPass( effectFXAA );   
 
   //Bloom
   const bloomPass = new THREE.UnrealBloomPass();
