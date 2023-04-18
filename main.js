@@ -12,115 +12,53 @@
 */
 
 
-//////LATTICE GENERATION//////
+//////GEOMETRY GENERATION//////
 
 var gDatas = [];
-var lattice_params, gData;
 var composition_params;
 
 // COMPOSITION - generate parameters for the composition of the piece
 composition_params = generate_composition_params(); // all input parameters are optional, they will be chosen at random if not passed into the function
 
+// WORKAROUND - to remove later
 var { aspect_ratio, frame_type, center_piece_type, center_piece_factor, explosion_type, light_source_type, explosion_center_a, explosion_center_b, celestial_object_types, feature_dimension, feature_frame, feature_primitive, feature_state, feature_celestial } = composition_params; // unpacking parameters we need in main.js and turning them into globals
+var stage = 6;
+var steps = get_steps(stage);
 
-// LATTICE 1 - FRAME, plane primitive, full size
-if (frame_type == 'narrow') {
-  lattice_params = generate_frame_params(6, 'narrow'); // all input parameters are optional, they will be chosen at random if not passed into the function
-  gData = generate_lattice(lattice_params);
-  gDatas.push(gData);
+// OVERRIDES
+var aspect_ratio = 0.75; // 0.75, 1.0, 1.5 - from OBSCVRVM
+var explosion_type = 0; // no explosion
 
-} else if (frame_type == 'dominating') {
-  lattice_params = generate_frame_params(4, 'extra_narrow');
-  gData = generate_lattice(lattice_params);
-  gDatas.push(gData);
-  lattice_params = generate_frame_params(6, 'dominating');
-  gData = generate_lattice(lattice_params);
-  gDatas.push(gData);
-
-} else if (frame_type == 'none') {
-  // in this case we are not drawing a frame at all
-}
-
-// LATTICE 2 - CENTER, random primitive, smaller size
-if (center_piece_type != 'none') {
-  lattice_params = generate_lattice_params(center_piece_type); // all input parameters are optional, they will be chosen at random if not passed into the function
-  lattice_params['start_bounds'] = lattice_params['start_bounds'] * center_piece_factor;
-  gData = generate_lattice(lattice_params);
-  gDatas.push(gData);
-
-  // generate another triangle with same parameters but rotated 180 degrees
-  if (center_piece_type == 'double_triangle') {
-    lattice_params['start_rot'] = lattice_params['start_rot'] == -30 ? 150 : -30;
-    gData = generate_lattice(lattice_params);
-    gDatas.push(gData);
-  }
-
-} else if (center_piece_type == 'none') {
-  // in this case we are not drawing a center piece at all
-}
-
-var nDatas = [];
-var nData;
-
-// LATTICE 3 - STARS, ordered, triangles
-lattice_params = generate_lattice_params('plane', 6); // all input parameters are optional, they will be chosen at random if not passed into the function
-nData = generate_lattice(lattice_params);
-nDatas.push(nData);
-
-// STARS - random
-var random_starfield_bounds = 1500;
-var nr_of_random_stars = 10000;
+// OLD WORKFLOW - from OBSCVRVM
+//lattice_params = generate_frame_params(6, 'narrow');
+//gData = generate_lattice(lattice_params);
+//gDatas.push(gData);
 
 
-var { stage, transformation_index, steps } = lattice_params; // WORKAROUND FOR NOW - all the params we need in main.js to make it run, but in the end we will have multiple lattices with multiple params
+var position = new THREE.Vector3(0, 0, 0);
+var start_bounds = 200;
+var double_sided = false;
+var triangulate = false;
 
-//////FXHASH FEATURES//////
+var start_mesh = new Tetrahedron(position.x, position.y, position.z, start_bounds, double_sided)
+var lattice_mesh = start_mesh.get_mesh();
+var lattice_mesh_target = start_mesh.get_mesh(); //JSON.parse(JSON.stringify(lattice_mesh)); //Deep Copy
 
-window.$fxhashFeatures = {
-  'Dimension': feature_dimension,
-  'Frame': feature_frame,
-  'Primitive': feature_primitive,
-  'State': feature_state,
-  'Celestial': feature_celestial
-};
+var gData = mesh_to_gData(lattice_mesh, lattice_mesh_target, triangulate)
+gDatas.push(gData);
+
+
 
 //////CONSOLE LOG//////
 
-var obscvrvm_logo = "%c                                                                         \n"
-                    + "%c     O B S C V R V M  |  { p r o t o c e l l : l a b s }  |  2 0 2 2     \n"
-                    + "%c                                                                         \n";
+var obscvrvm_logo =   "%c                                                                                       \n"
+                    + "%c     V E R S E  |  { p r o t o c e l l : l a b s }  +  o f f i c e c a  |  2 0 2 3     \n"
+                    + "%c                                                                                       \n";
 
 console.log( obscvrvm_logo,
             'color: white; background: #000000; font-weight: bold; font-family: "Courier New", monospace;',
             'color: white; background: #000000; font-weight: bold; font-family: "Courier New", monospace;',
             'color: white; background: #000000; font-weight: bold; font-family: "Courier New", monospace;');
-
-
-console.log('%cFelix, qui potuit rerum cognoscere causas.\n', 'font-style: italic; font-family: "Courier New", monospace;');
-
-console.log('%cTOKEN FEATURES', 'color: white; background: #000000;', '\n',
-            'Dimension -> ' + feature_dimension, '\n',
-            'Frame     -> ' + feature_frame, '\n',
-            'Primitive -> ' + feature_primitive, '\n',
-            'State     -> ' + feature_state, '\n',
-            'Celestial -> ' + feature_celestial, '\n');
-
-console.log('%cCONTROLS', 'color: white; background: #000000;', '\n',
-            'a   : jump light angle', '\n',
-            'f   : cycle light framerate', '\n',
-            't   : cycle light tick', '\n',
-            'i   : info', '\n',
-            'b   : white / black background', '\n',
-            'g   : start / stop gif capture', '\n',
-            '1-5 : image capture 1-5x resolution', '\n');
-
-console.log('%cPERFORMANCE', 'color: white; background: #000000;', '\n',
-            'Default shadow map size is 4096 pix. On iOS devices, this was downgraded to 2048 pix due to memory limitations. This value can be changed by passing a query string to the URL with an arbitrary shadow map size of the form ?shadow=value.', '\n',
-            'Examples -> ?shadow=4096, ?shadow=2048, ?shadow=1024, ?shadow=512 ...', '\n');
-
-console.log('%cPIXELS', 'color: white; background: #000000;', '\n',
-            "Change pixel density by changing your browser's zoom level (50% zoom doubles the pixels etc.)", '\n');
-                                 
 
 //////END CONSOLE LOG//////
 
@@ -335,21 +273,6 @@ View.prototype.addInstances = function  () {
       dummy.position.set((gData.nodes[source_index].x+gData.nodes[target_index].x)/2, (gData.nodes[source_index].y+gData.nodes[target_index].y)/2, (gData.nodes[source_index].z+gData.nodes[target_index].z)/2)
       dummy.updateMatrix();
 
-      
-      // cull members according to their proximity to the axis
-      // var cull_member_x_axis = (Math.abs((gData.nodes[source_index].x + gData.nodes[target_index].x) / 2) < cull_band_width) || (Math.abs(gData.nodes[source_index].x) < cull_band_min) || (Math.abs(gData.nodes[target_index].x) < cull_band_min); //(gene() < 0.95)
-      // var cull_member_y_axis = (Math.abs((gData.nodes[source_index].y + gData.nodes[target_index].y) / 2) < cull_band_width) || (Math.abs(gData.nodes[source_index].y) < cull_band_min) || (Math.abs(gData.nodes[target_index].y) < cull_band_min); //(gene() < 0.95)
-
-      // !cull_member_x_axis - cull members along x-axis
-      // !cull_member_y_axis - cull members along y-axis
-      // !(cull_member_x_axis || cull_member_y_axis) - cull members along x-axis and y-axis
-
-      /*if (cull_member_y_axis) {
-        if ( gene() < 0.05 ) { //5/(Math.abs((gData.nodes[source_index].y + gData.nodes[target_index].y) / 2))
-          cull_member_y_axis = false;
-        }
-      }*/
-
       // EXPLODING LATTICE MEMBERS
 
       // setting default for all members not to get culled 
@@ -540,628 +463,11 @@ View.prototype.addInstances = function  () {
 
 }
 
-// takes as an input nData object for location of stars
-View.prototype.addStarsOrdered = function ()
-{
-  var star_plane_distance = -2000; // z coordinate of the plane where stars reside (they also recieve no shadow)
-  var star_jitter = 10; // every lattice node is randomly jittered so the stars don't align
 
-  // one triangle
-  const vertices = [
-    0, 1, 0, // top
-    1, 0, 0, // right
-    -1, 0, 0 // left
-  ];
-  // only one face
-  const faces = [ 2, 1, 0 ];
-  const triangle_radius = 0.30; //0.5
 
-  const geometry = new THREE.PolyhedronGeometry(vertices, faces, triangle_radius, 0);
-  geometry.scale(1, 1.5, 1);
-  const material = new THREE.MeshPhongMaterial( {color: 0xffffff} );
-  
-  for (var n = 0; n < nDatas.length; n++) {
-    var nData = nDatas[n];
-    const imesh = new THREE.InstancedMesh( geometry, material, nData.nodes.length )
-    imesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
 
-    for (var i = 0; i < nData.nodes.length; i++) {
-      const dummy = new THREE.Object3D();
 
-      var uniscale = 0.5 + gene();
-      dummy.scale.set(uniscale,uniscale,uniscale); // dynamically assign this to give different sizes (eg add attribute to nData.nodes and call it here)
-      dummy.position.set(nData.nodes[i].x + gene_range(-star_jitter, star_jitter), nData.nodes[i].y + gene_range(-star_jitter, star_jitter), star_plane_distance);
-      
-      dummy.rotateX(gene() * Math.PI/3 - Math.PI/6);
-      dummy.rotateY(gene() * Math.PI/3 - Math.PI/6);
-      dummy.rotateZ(gene() * Math.PI/3 - Math.PI/6);
 
-      dummy.updateMatrix();
-      imesh.setMatrixAt( i, dummy.matrix );
-  }
-
-  imesh.instanceMatrix.needsUpdate = true
-  //imesh.castShadow = true; // remove for performance
-  //imesh.receiveShadow = true; // stars recieve no shadow
-  this.scene.add(imesh);
-
-  }
-
-}
-
-View.prototype.addStarsRandom = function (bounds = 100, qty = 100)
-{
-  var star_plane_distance = -2000; // z coordinate of the plane where stars reside (they also recieve no shadow)
-
-  // one triangle
-  const vertices = [
-    0, 1, 0, // top
-    1, 0, 0, // right
-    -1, 0, 0 // left
-  ];
-  // only one face
-  const faces = [ 2, 1, 0 ];
-  const triangle_radius = 0.30; //0.5
-
-  const geometry = new THREE.PolyhedronGeometry(vertices, faces, triangle_radius, 0);
-  geometry.scale(1, 1.5, 1);
-  const material = new THREE.MeshPhongMaterial( {color: 0xffffff} );
-  
-  const imesh = new THREE.InstancedMesh( geometry, material, qty )
-  imesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
-
-  for (var i = 0; i < qty; i++) {
-    const dummy = new THREE.Object3D();
-
-    var uniscale = 0.5 + gene();
-    dummy.scale.set(uniscale,uniscale,uniscale); // dynamically assign this to give different sizes (eg add attribute to nData.nodes and call it here)
-    dummy.position.set(gene() * bounds - bounds/2, gene() * bounds - bounds/2,  star_plane_distance);
-
-    dummy.rotateX(gene() * Math.PI/3 - Math.PI/6);
-    dummy.rotateY(gene() * Math.PI/3 - Math.PI/6);
-    dummy.rotateZ(gene() * Math.PI/3 - Math.PI/6);
-
-    dummy.updateMatrix();
-    imesh.setMatrixAt( i, dummy.matrix );
-  }
-
-  imesh.instanceMatrix.needsUpdate = true
-  //imesh.castShadow = true; // remove for performance
-  //imesh.receiveShadow = true; // stars recieve no shadow
-  this.scene.add(imesh);
-
-  
-
-}
-
-View.prototype.addCelestialObject = function (celestial_object_type)
-{
-  var radius_x, radius_y, radius_planet_x, radius_planet_y, radius_moon_x, radius_moon_y, radius_moon_2nd_x, radius_moon_2nd_y, r_x, r_y, radius_offset, radius_atmosphere, radius_nova_x, radius_nova_y, radius_ring_x, radius_ring_y, ring_y_scale, rapture_size, radius_rapture_x, radius_rapture_y, bounds_x, bounds_y, radius_star_x, radius_star_y, radius_factor, radius_elongation, radius_factors;
-  var cent_x, cent_y, cent_planet_x, cent_planet_y, cent_moon_x, cent_moon_y, cent_moon_2nd_x, cent_moon_2nd_y, moon_offset_x, moon_offset_y, celestial_x, celestial_y, celestial_x_rot, celestial_y_rot, centers_x, centers_y;
-  var angle, r, tilt_angle, comet_rot, nr_of_triangles, nr_of_meteors, nr_of_stars, star_range, constellation_bounds;
-  var customGaussian, stdev, stdevs, ringGaussian, secondRingGaussian, customGaussian2nd, stdev2nd, hasDoubleRing, hasMoon, hasAtmosphere, orbitFlipped, perlin_shift, perlin_scale, hasStarShine, star_shine;
-
-  var celestial_plane_distance = -1800; // z coordinate of the plane where stars reside (they also recieve no shadow)
-  var monteCarloHit = true; // this will draw the triangle and is true by default, except for nebula case where it can become false
-  var nr_of_tries = 100; // number of tries to try to displace the center of the celestial (used in a for loop)
-  var cent_offset = center_piece_type != 'none' ? 100 : 0; // center offset is set if there is a lattice in the center, otherwise it's zero
-
-  if (celestial_object_type == 'comet') {
-    radius_x = 500;
-    radius_y = 500;
-    // here we are trying to choose the center until at least one coordinate is not close to the center (so it doesn't overlap with the lattice in the center)
-    for (var i = 0; i < nr_of_tries; i++) {
-      cent_x = gene_range(-100 - cent_offset/2, 100 + cent_offset/2);
-      cent_y = gene_range(-100 - cent_offset/2, 100 + cent_offset/2);
-      if (Math.max(Math.abs(cent_x), Math.abs(cent_y)) > cent_offset) {break;}
-    }
-    tilt_angle = gene_range(-Math.PI, Math.PI); // full 360 degrees
-    comet_rot = gene() < 0.5 ? Math.PI/4 : -Math.PI/4; // clockwise, anti-clockwise
-    nr_of_triangles = 10000;
-    customGaussian = gaussian(0, gene_range(0.01, 0.20)); // used for the comet, second param determines the width of the trail
-  
-  } else if (celestial_object_type == 'eclipse') {
-    radius_x = gene_range(10, 75);
-    radius_y = radius_x;
-    // here we are trying to choose the center until at least one coordinate is not close to the center (so it doesn't overlap with the lattice in the center)
-    for (var i = 0; i < nr_of_tries; i++) {
-      cent_x = gene_range(-100 - cent_offset/2, 100 + cent_offset/2);
-      cent_y = gene_range(-100 - cent_offset/2, 100 + cent_offset/2);
-      if (Math.max(Math.abs(cent_x), Math.abs(cent_y)) > cent_offset) {break;}
-    }
-    tilt_angle = gene_range(-Math.PI, Math.PI); // full 360 degrees
-    nr_of_triangles = Math.ceil(1000 * Math.sqrt(radius_x));
-    stdev = gene() < 0.25 ? 2.0 : 0.4;
-    customGaussian = gaussian(0, stdev);
-
-  } else if (celestial_object_type == 'ultra eclipse') {
-    radius_x = gene_range(100, 150);
-    radius_y = radius_x;
-    cent_x = 0;
-    cent_y = 0;
-    tilt_angle = gene_range(-Math.PI, Math.PI); // full 360 degrees
-    nr_of_triangles = 20000;
-    stdev = gene() < 0.5 ? 2.0 : 0.4;
-    customGaussian = gaussian(0, stdev);
-
-  } else if (celestial_object_type == 'moon') {
-    radius_planet_x = gene_range(10, 75);
-    radius_planet_y = radius_planet_x;
-    radius_x = radius_planet_x; // we have to define this here as well so that the dark disc can be positioned
-    radius_y = radius_planet_x; // same as above
-    // here we are trying to choose the center until at least one coordinate is not close to the center (so it doesn't overlap with the lattice in the center)
-    for (var i = 0; i < nr_of_tries; i++) {
-      cent_planet_x = gene_range(-100 - cent_offset/2, 100 + cent_offset/2);
-      cent_planet_y = gene_range(-100 - cent_offset/2, 100 + cent_offset/2);
-      if (Math.max(Math.abs(cent_planet_x), Math.abs(cent_planet_y)) > cent_offset) {break;}
-    }
-    cent_x = cent_planet_x; // we have to define this here as well so that the dark disc can be positioned
-    cent_y = cent_planet_y; // same as above
-    moon_offset_x = gene_range(-100, 100); 
-    moon_offset_y = gene_range(-100, 100);
-    cent_moon_x = cent_planet_x + moon_offset_x; // approximation - moon is close to the center of the planet
-    cent_moon_y = cent_planet_y + moon_offset_y; // same as above
-    cent_moon_2nd_x = cent_planet_x - moon_offset_x * 0.5; // second moon is right opposite the center but closer
-    cent_moon_2nd_y = cent_planet_y - moon_offset_y * 0.5; // same as above
-    radius_moon_x = radius_planet_x * gene_range(0.05, 0.25);
-    radius_moon_y = radius_moon_x;
-    radius_moon_2nd_x = radius_moon_x * 0.5; // second moon is half the size
-    radius_moon_2nd_y = radius_moon_2nd_x;
-    tilt_angle = gene_range(-Math.PI, Math.PI); // full 360 degrees
-    nr_of_triangles = Math.ceil(1000 * Math.sqrt(radius_planet_x));
-    customGaussian = gaussian(0, 0.4);
-    hasMoon = gene() < 0.50 ? true : false; // chance of a planet having a moon
-    has2ndMoon = gene() < 0.25 ? true : false; // chance of a planet having a second moon
-    hasAtmosphere = gene() < 0.25 ? true : false; // chance of a planet having an atmosphere
-
-  } else if (celestial_object_type == 'planet') {
-    radius_x = gene_range(10, 75);
-    radius_y = radius_x * 0.25;
-    // here we are trying to choose the center until at least one coordinate is not close to the center (so it doesn't overlap with the lattice in the center)
-    for (var i = 0; i < nr_of_tries; i++) {
-      cent_x = gene_range(-100 - cent_offset/2, 100 + cent_offset/2);
-      cent_y = gene_range(-100 - cent_offset/2, 100 + cent_offset/2);
-      if (Math.max(Math.abs(cent_x), Math.abs(cent_y)) > cent_offset) {break;}
-    }
-    tilt_angle = gene_range(-Math.PI, Math.PI); // full 360 degrees
-    nr_of_triangles = Math.ceil(1000 * Math.sqrt(radius_x));
-    customGaussian = gaussian(0, 0.4);
-    stdev = gene_range(0.01, 0.15);
-    ringGaussian = gaussian(1, stdev);
-    hasDoubleRing = gene() < 0.35 ? true : false; // chance of a planet having a second ring
-    secondRingGaussian = gaussian(1, 0.01);
-    radius_offset = gene_range(1.2, 1.4); // scale factor for the second ring
-
-  } else if (celestial_object_type == 'orbit') {
-    radius_planet_x = 1000;
-    radius_planet_y = radius_planet_x;
-    radius_x = radius_planet_x; // we have to define this here as well so that the dark disc can be positioned
-    radius_y = radius_planet_x; // same as above
-    radius_atmosphere = radius_planet_x * gene_range(1.01, 1.05);
-    orbitFlipped = gene() < 0.5 ? true : false; // determines if the planet is above or below the frame
-    cent_planet_x = gene_range(-100, 100);
-    cent_planet_y =  orbitFlipped ? gene_range(1000, 1100) : gene_range(-1000, -1100);
-    cent_x = cent_planet_x; // we have to define this here as well so that the dark disc can be positioned
-    cent_y = cent_planet_y; // same as above
-    cent_moon_x = gene_range(-200, 200);
-    cent_moon_y = orbitFlipped ? gene_range(-150, -100) : gene_range(100, 150);
-    radius_moon_x = gene_range(5, 15);
-    radius_moon_y = radius_moon_x;
-    tilt_angle = 0; // full 360 degrees
-    nr_of_triangles = 100000; //Math.ceil(2000 * Math.sqrt(radius_planet_x));
-    customGaussian = gaussian(0, 0.4);
-    hasMoon = gene() < 0.70 ? true : false; // chance of a planet having a moon
-    hasAtmosphere = true; // chance of a planet having an atmosphere
-    
-  } else if (celestial_object_type == 'meteor shower') {
-    radius_x = 500;
-    radius_y = 500;
-    centers_x = [];
-    centers_y = [];
-    stdevs = []
-    nr_of_meteors = generateRandomInt(20, 100);
-    for (var i = 0; i < nr_of_meteors; i++) {
-      centers_x.push(gene_range(-350, 350));
-      centers_y.push(gene_range(-350, 350));
-      stdevs.push(gene_range(0.001, 0.01));
-    }
-    tilt_angle = gene_range(-Math.PI, Math.PI); // full 360 degrees
-    nr_of_triangles = 50000;
-    
-  } else if (celestial_object_type == 'quasar') {
-    radius_nova_x = 500;
-    radius_nova_y = radius_nova_x * gene_range(0.001, 0.02); // spread of the quasar beam
-    radius_ring_y = gene_range(50, 100);
-    radius_ring_x = radius_ring_y * gene_range(0.05, 0.20); // width of the cloud elipse
-    cent_x = gene_range(-100, 100);
-    cent_y = gene_range(-100, 100);
-    tilt_angle = gene_range(-Math.PI, Math.PI); // full 360 degrees
-    nr_of_triangles = 50000;
-    stdev = gene_range(0.01, 0.5);
-    customGaussian = gaussian(1, stdev); // spread of the cloud ring 1, 0.1
-
-  } else if (celestial_object_type == 'nova') {
-    radius_nova_x = gene_range(5, 50);
-    radius_nova_y = radius_nova_x;
-    radius_ring_y = gene_range(50, 100);
-    ring_y_scale = gene_range(0.05, 0.20); // width of the cloud elipse
-    radius_ring_x = radius_ring_y * ring_y_scale;
-    radius_offset = gene_range(1.5, 3.0); // scale factor for the second ring
-    cent_x = gene_range(-100, 100);
-    cent_y = gene_range(-100, 100);
-    tilt_angle = gene_range(-Math.PI, Math.PI); // full 360 degrees
-    nr_of_triangles = 50000;
-    stdev = gene_range(0.01, 0.5);
-    customGaussian = gaussian(1, stdev); // spread of the cloud ring
-    stdev2nd = gene_range(0.01, 0.5);
-    customGaussian2nd = gaussian(1, stdev2nd); // spread of the cloud ring
-    hasDoubleRing = gene() < 0.80 ? true : false; // chance of having a second ring
-
-  } else if (celestial_object_type == 'rapture') {
-    radius_rapture_x = 500;
-    radius_rapture_y = 500;
-    rapture_size = gene_range(0.05, 0.15);
-    radius_x = radius_rapture_x * rapture_size; // we have to define this here as well so that the dark disc can be positioned
-    radius_y = radius_rapture_x * rapture_size; // same as above
-    cent_x = gene_range(-100, 100);
-    cent_y = gene_range(-100, 100);
-    tilt_angle = gene_range(-Math.PI, Math.PI); // full 360 degrees
-    nr_of_triangles = 50000;
-  
-  } else if (celestial_object_type == 'nebula') {
-    bounds_x = 400;
-    bounds_y = 400;
-    cent_x = 0;
-    cent_y = 0;
-    tilt_angle = gene_range(-Math.PI, Math.PI); // full 360 degrees
-    nr_of_triangles = 50000;
-    perlin_shift = gene_range(-100, 100); // this will make sure the perlin pattern is not always the same
-    perlin_scale = gene_range(0.001, 0.02); // scale of perlin features
-  
-  } else if (celestial_object_type == 'constellation') {
-    radius_star_x = 50;
-    radius_star_y = 50;
-    radius_x = radius_star_x;
-    radius_y = radius_star_y;
-    radius_elongation = 0.05;
-    radius_factors = [];
-    hasStarShine = [];
-    centers_x = [];
-    centers_y = [];
-    star_range = gene() < 0.80 ? 1 : 100; // select between two extremes
-    nr_of_stars = generateRandomInt(star_range, star_range + 10);
-    constellation_bounds = gene_range(150, 300);
-    for (var i = 0; i < nr_of_stars; i++) {
-      centers_x.push(gene_range(-constellation_bounds, constellation_bounds));
-      centers_y.push(gene_range(-constellation_bounds, constellation_bounds));
-      radius_factors.push(gene_range(0.05, 0.95)); // every star has a different size
-      star_shine = gene() < 0.25 ? true : false;
-      hasStarShine.push(star_shine); // determines if the star shine (like a plus sign) will be drawn for that star
-    }
-    tilt_angle = 0;
-    nr_of_triangles = nr_of_stars * 1000;
-
-  }
-
-  
-  // place dark disk behind the celestial objects but in front of the stars so they are covered
-  if (celestial_object_type == 'eclipse' || celestial_object_type == 'ultra eclipse' || celestial_object_type == 'moon' || celestial_object_type == 'planet' || celestial_object_type == 'orbit' || celestial_object_type == 'rapture') {
-    const dark_disc_geo = new THREE.CircleGeometry(radius_x, 16);
-    const dark_disc_material = new THREE.MeshBasicMaterial({color: 0x000000});
-    const dark_disc_mesh = new THREE.Mesh(dark_disc_geo, dark_disc_material);
-    dark_disc_mesh.position.set(cent_x, cent_y, celestial_plane_distance - 100);
-    this.scene.add(dark_disc_mesh);
-  }
-
-  // one triangle
-  const vertices = [
-    0, 1, 0, // top
-    1, 0, 0, // right
-    -1, 0, 0 // left
-  ];
-  // only one face
-  const faces = [ 2, 1, 0 ];
-  const triangle_radius = 0.30; //0.5
-
-  const geometry = new THREE.PolyhedronGeometry(vertices, faces, triangle_radius, 0);
-  geometry.scale(1, 1.5, 1);
-  const material = new THREE.MeshPhongMaterial( {color: 0xffffff} );
-  
-  const imesh = new THREE.InstancedMesh( geometry, material, nr_of_triangles )
-  imesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
-
-  // main loop that calcupates positions of all triangles
-  for (var i = 0; i < nr_of_triangles; i++) {
-
-    // special parameters for each celestial type
-
-    if (celestial_object_type == 'comet') {
-      angle = gene_range(-Math.PI * customGaussian(), Math.PI * customGaussian()); // puts a bias on one side of the circle - angle is determined by the tilt_angle - COMET
-      r = gene_range(0, gene_range(0, gene_range(0, gene_range(0, 1)))); // more dense in the middle - COMET
-    
-    } else if (celestial_object_type == 'eclipse' || celestial_object_type == 'ultra eclipse') {
-      angle = gene_range(-Math.PI * customGaussian(), Math.PI * customGaussian()); // puts a bias on one side of the circle - angle is determined by the tilt_angle - ECLIPSE
-      r = 1 / (1 - gene_range(0, gene_range(0, gene_range(0, gene_range(0, 1))))); // solar eclipse - ECLIPSE
-    
-    } else if (celestial_object_type == 'moon') {
-      if (gene() < 0.75) {
-        // spherical planet
-        angle = gene_range(-Math.PI * customGaussian(), Math.PI * customGaussian()); // puts a bias on one side of the circle - angle is determined by the tilt_angle - PLANET
-        r = 1 - gene_range(0, gene_range(0, gene_range(0, gene_range(0, 1)))); // more dense at the edge - PLANET
-        radius_x = radius_planet_x;
-        radius_y = radius_planet_y;
-        cent_x = cent_planet_x;
-        cent_y = cent_planet_y;
-
-      } else if (hasAtmosphere) {
-        // spherical atmosphere
-        angle = gene_range(-Math.PI * customGaussian(), Math.PI * customGaussian()); // puts a bias on one side of the circle - angle is determined by the tilt_angle - PLANET
-        r = 1 - gene_range(0, gene_range(0, gene_range(0, 1))); // less dense at the edge - ATMOSPHERE
-        radius_x = radius_planet_x * 1.1;
-        radius_y = radius_planet_y * 1.1;
-        cent_x = cent_planet_x;
-        cent_y = cent_planet_y;
-      }
-      
-      if (hasMoon && (gene() < 0.1)) {
-        // spherical moon
-        angle = gene_range(-Math.PI * customGaussian(), Math.PI * customGaussian()); // puts a bias on one side of the circle - angle is determined by the tilt_angle - MOON
-        r = 1 - gene_range(0, gene_range(0, gene_range(0, gene_range(0, 1)))); // more dense at the edge - MOON
-        radius_x = radius_moon_x;
-        radius_y = radius_moon_y;
-        cent_x = cent_moon_x;
-        cent_y = cent_moon_y;
-      }
-
-      if (has2ndMoon && (gene() < 0.05)) {
-        // spherical 2nd moon
-        angle = gene_range(-Math.PI * customGaussian(), Math.PI * customGaussian()); // puts a bias on one side of the circle - angle is determined by the tilt_angle - 2nd MOON
-        r = 1 - gene_range(0, gene_range(0, gene_range(0, gene_range(0, 1)))); // more dense at the edge - 2nd MOON
-        radius_x = radius_moon_2nd_x;
-        radius_y = radius_moon_2nd_y;
-        cent_x = cent_moon_2nd_x;
-        cent_y = cent_moon_2nd_y;
-      }
-
-    } else if (celestial_object_type == 'planet') {
-      if (gene() < 0.65) {
-        // spherical planet
-        angle = gene_range(-Math.PI * customGaussian(), Math.PI * customGaussian()); // puts a bias on one side of the circle - angle is determined by the tilt_angle - PLANET
-        r = 1 - gene_range(0, gene_range(0, gene_range(0, gene_range(0, 1)))); // more dense at the edge
-        r_x = radius_x * 0.6;
-        r_y = radius_x * 0.6;
-
-      } else {
-        // elipse ring
-        angle = gene_range(2 * Math.PI / 3, 7 * Math.PI / 3); // top arc taken out
-        r = ringGaussian(); // cloud aroud the edge
-        r_x = radius_x;
-        r_y = radius_y;
-      }
-
-      if (hasDoubleRing && (gene() < 0.1)) {
-        // second elipse ring
-        angle = gene_range(2 * Math.PI / 3, 7 * Math.PI / 3); // top arc taken out
-        r = secondRingGaussian(); // cloud aroud the edge
-        r_x = radius_x * radius_offset;
-        r_y = radius_y * radius_offset;
-      }
-
-    }  else if (celestial_object_type == 'orbit') {
-      if (gene() < 0.75) {
-        // spherical planet
-        angle = orbitFlipped ? gene_range(5 * Math.PI / 4, 7 * Math.PI / 4) : gene_range(-5 * Math.PI / 4, -7 * Math.PI / 4); // bottom or top 90 degrees
-        r = 1 - gene_range(0, gene_range(0, gene_range(0, gene_range(0, 1)))); // more dense at the edge - PLANET
-        radius_x = radius_planet_x;
-        radius_y = radius_planet_y;
-        cent_x = cent_planet_x;
-        cent_y = cent_planet_y;
-
-      } else if (hasAtmosphere) {
-        // spherical atmosphere
-        angle = orbitFlipped ? gene_range(5 * Math.PI / 4, 7 * Math.PI / 4) : gene_range(-5 * Math.PI / 4, -7 * Math.PI / 4); // bottom or top 90 degrees
-        r = 1 - gene_range(0, gene_range(0, gene_range(0, gene_range(0, 1)))); // more dense at the edge - ATMOSPHERE
-        radius_x = radius_atmosphere;
-        radius_y = radius_atmosphere;
-        cent_x = cent_planet_x;
-        cent_y = cent_planet_y;
-      }
-
-      if (hasMoon && (gene() < 0.01)) {
-        // spherical moon
-        angle = gene_range(-Math.PI * customGaussian(), Math.PI * customGaussian()); // puts a bias on one side of the circle - angle is determined by the tilt_angle - MOON
-        r = 1 - gene_range(0, gene_range(0, gene_range(0, gene_range(0, 1)))); // more dense at the edge - MOON
-        radius_x = radius_moon_x;
-        radius_y = radius_moon_y;
-        cent_x = cent_moon_x;
-        cent_y = cent_moon_y;
-      }
-
-    } else if (celestial_object_type == 'meteor shower') {
-      rand_idx = generateRandomInt(0, centers_x.length); // we choose a random index from the list that holds meteor coordinates
-      customGaussian = gaussian(0, stdevs[rand_idx]); // used for the comet, second param determines the width of the trail
-      angle = gene_range(-Math.PI * customGaussian(), Math.PI * customGaussian()); // puts a bias on one side of the circle - angle is determined by the tilt_angle - METEOR SHOWER
-      r = gene_range(0, gene_range(0, gene_range(0, gene_range(0, 1)))); // more dense in the middle - METEOR SHOWER
-      cent_x = centers_x[rand_idx]; // draw random meteor from the coordinate list
-      cent_y = centers_y[rand_idx]; // same as above
-
-    } else if (celestial_object_type == 'quasar') {
-      angle = gene_range(0, Math.PI * 2); // full 360 degrees
-      if (gene() < 0.75) {
-        // quasar beam - elongated super nova
-        r = perlin2D(radius_x * Math.cos(angle) * 1.0, radius_y * Math.sin(angle) * 1.0); // supernova - QUASAR
-        radius_x = radius_nova_x;
-        radius_y = radius_nova_y;
-      } else {
-        // elipsoid ring
-        r = customGaussian(); // cloud aroud the edge
-        radius_x = radius_ring_x;
-        radius_y = radius_ring_y;
-      }
-
-    } else if (celestial_object_type == 'nova') {
-      angle = gene_range(0, Math.PI * 2); // full 360 degrees
-      if (gene() < 0.75) {
-        // super nova
-        r = perlin2D(radius_x * Math.cos(angle) * 1.0, radius_y * Math.sin(angle) * 1.0); // supernova - NOVA
-        radius_x = radius_nova_x;
-        radius_y = radius_nova_y;
-      } else {
-        // elipsoid ring
-        r = customGaussian(); // cloud aroud the edge
-        radius_x = radius_ring_x;
-        radius_y = radius_ring_y;
-      }
-
-      if (hasDoubleRing && (gene() < 0.25)) {
-        // second elipsoid ring
-        r = customGaussian2nd(); // cloud aroud the edge
-        radius_x = radius_ring_x * radius_offset;
-        radius_y = radius_ring_y * radius_offset;
-      }
-
-    } else if (celestial_object_type == 'rapture') {
-      angle = gene_range(0, Math.PI * 2); // full 360 degrees
-      r = rapture_size / (1 - perlin2D(radius_x * Math.cos(angle) * 0.1, radius_y * Math.sin(angle) * 0.1)); // dark central object bursting with light rays - RAPTURE
-      radius_x = radius_rapture_x;
-      radius_y = radius_rapture_y;
-
-    } else if (celestial_object_type == 'nebula') {
-      rand_x = gene_range(-bounds_x, bounds_x);
-      rand_y = gene_range(-bounds_y, bounds_y);
-      monteCarloHit = gene() < perlin2D(perlin_shift + rand_x * perlin_scale, perlin_shift + rand_y * perlin_scale) * 1.0; // perlin field influences the probability of a star appearing - NEBULA
-
-    } else if (celestial_object_type == 'constellation') {
-      rand_idx = generateRandomInt(0, centers_x.length); // we choose a random index from the list that holds meteor coordinates
-      angle = gene_range(0, Math.PI * 2); // full 360 degrees
-      r = gene_range(0, gene_range(0, gene_range(0, gene_range(0, gene_range(0, 1))))); // more dense in the middle - CONSTELLATION
-      cent_x = centers_x[rand_idx]; // draw random star from the coordinate list
-      cent_y = centers_y[rand_idx]; // same as above
-
-      if (hasStarShine[rand_idx] == true) {
-        // shine part of the star (like a plus sign)
-        if (gene() < 0.5) {
-          radius_x = radius_star_x * radius_elongation * radius_factors[rand_idx]; // here radius_elongation is actually shortening
-          radius_y = radius_star_y * radius_factors[rand_idx] * 5.0; // this last factor will additionally elongate the shine
-        } else {
-          radius_x = radius_star_x * radius_factors[rand_idx] * 5.0; // this last factor will additionally elongate the shine
-          radius_y = radius_star_y * radius_elongation * radius_factors[rand_idx]; // here radius_elongation is actually shortening
-        }
-        // fuzzy spherical part of the star
-        if (gene() < 0.25) {
-          radius_x = radius_star_x * radius_factors[rand_idx];
-          radius_y = radius_star_y * radius_factors[rand_idx];
-        }
-
-      } else {
-        // fuzzy spherical part of the star
-        radius_x = radius_star_x * radius_factors[rand_idx] * 0.25;
-        radius_y = radius_star_y * radius_factors[rand_idx] * 0.25;
-      }
-
-    }
-
-
-    // determining the position of each triangle
-
-    if (celestial_object_type == 'nebula') {
-      // not based on a circle equation, just on perlin noise
-      celestial_x = rand_x;
-      celestial_y = rand_y;
-
-    } else if (celestial_object_type == 'planet') {
-      // exception because we have to draw planet and its ring at the same time (one is a sphere, the other an elipse)
-      celestial_x = cent_x + r * r_x * Math.cos(angle) * Math.cos(tilt_angle) - r * r_y * Math.sin(angle) * Math.sin(tilt_angle);
-      celestial_y = cent_y + r * r_x * Math.cos(angle) * Math.sin(tilt_angle) + r * r_y * Math.sin(angle) * Math.cos(tilt_angle);
-
-    } else {
-      // default case
-      // general parametrization for a tilted ellipse
-      //https://math.stackexchange.com/questions/2645689/what-is-the-parametric-equation-of-a-rotated-ellipse-given-the-angle-of-rotatio
-      celestial_x = cent_x + r * radius_x * Math.cos(angle) * Math.cos(tilt_angle) - r * radius_y * Math.sin(angle) * Math.sin(tilt_angle);
-      celestial_y = cent_y + r * radius_x * Math.cos(angle) * Math.sin(tilt_angle) + r * radius_y * Math.sin(angle) * Math.cos(tilt_angle);
-    }
-
-    if (celestial_object_type == 'comet') {
-      // additional rotation of points proportional to r - COMET
-      celestial_x_rot = celestial_x * Math.cos(comet_rot * r) - celestial_y * Math.sin(comet_rot * r);
-      celestial_y_rot = celestial_x * Math.sin(comet_rot * r) + celestial_y * Math.cos(comet_rot * r);
-      celestial_x = celestial_x_rot;
-      celestial_y = celestial_y_rot;
-    }
-    
-    if (celestial_object_type == 'nebula') {
-      // rotation of points proportional to tilt_angle - NEBULA
-      celestial_x_rot = celestial_x * Math.cos(tilt_angle) - celestial_y * Math.sin(tilt_angle);
-      celestial_y_rot = celestial_x * Math.sin(tilt_angle) + celestial_y * Math.cos(tilt_angle);
-      celestial_x = celestial_x_rot;
-      celestial_y = celestial_y_rot;
-    }
-
-    const dummy = new THREE.Object3D();
-    var uniscale = 0.5 + gene();
-    dummy.scale.set(uniscale, uniscale, uniscale); // dynamically assign this to give different sizes (eg add attribute to nData.nodes and call it here)
-    dummy.position.set(celestial_x, celestial_y, celestial_plane_distance);
-    
-    dummy.rotateX(gene() * Math.PI/3 - Math.PI/6);
-    dummy.rotateY(gene() * Math.PI/3 - Math.PI/6);
-    dummy.rotateZ(gene() * Math.PI/3 - Math.PI/6);
-
-    dummy.updateMatrix();
-    // if any triangle ends up too far from the center, we don't draw it
-    // also monteCarloHit == false can appear in nebula type
-    if (Math.max(Math.abs(celestial_x), Math.abs(celestial_y)) < 1000 && monteCarloHit) {
-      imesh.setMatrixAt( i, dummy.matrix );
-    }
-  }
-
-  
-  imesh.instanceMatrix.needsUpdate = true
-  //imesh.castShadow = true; // remove for performance
-  //imesh.receiveShadow = true; // stars recieve no shadow
-  this.scene.add(imesh);
-
-}
-
-
-View.prototype.addLineMesh = function (data, dash_array, dash_ratio, line_thickness, dash_speed) {
-  var temp_array = new Float32Array(6);
-  //console.log(gData.nodes[data['source']].x)
-  temp_array[0] = gData.nodes[data['source']].x;
-  temp_array[1] = gData.nodes[data['source']].y;
-  temp_array[2] = gData.nodes[data['source']].z;
-  temp_array[3] = gData.nodes[data['target']].x;
-  temp_array[4] = gData.nodes[data['target']].y;
-  temp_array[5] = gData.nodes[data['target']].z;
-
-  var geo = new THREE.BufferGeometry()
-
-  geo.setAttribute( 'position', new THREE.BufferAttribute( temp_array, 3 ) );
-
-  var g = new MeshLine();
-  g.setGeometry( geo );
-  //g.setFromPoints()
-  this.meshline_data.push(g)
-
-  var material = new MeshLineMaterial( {
-    antialias: true,
-    useMap: false,
-    color: new THREE.Color( my_features.ink),
-    opacity: 1,
-    transparent: true, // switch to false is opacity is 1, switch to true when using dashed lines
-    dashArray: dash_array, // 0.05, 0 -> no dash ; 1 -> half dashline length ; 2 -> dashline = length
-    dashOffset: 0,
-    dashRatio: dash_ratio, // 0.0 -> full line ; 0.5 -> balancing ; 1.0 -> full void
-    //resolution: resolution,
-    sizeAttenuation: false, // makes the line width constant regardless distance (1 unit is 1px on screen) (false - attenuate, true - don't attenuate)
-    lineWidth: line_thickness, // 0.002, float defining width (if sizeAttenuation is true, it's world units; else is screen pixels)
-  });
-
-  var mesh = new THREE.Mesh( g.geometry, material );
-  this.meshline_mesh.push(mesh);
-
-  this.scene.add(mesh);
-}
 
 
 
@@ -1321,16 +627,10 @@ function Controller(viewArea) {
     }, parallex_framerate);
   }, parallex_delay)
 
-  view.addInstances();
-  view.addStarsOrdered(); // ordered stars based on lattice nodes from nDatas
-  view.addStarsRandom(random_starfield_bounds, nr_of_random_stars); // random stars - parameters > (bounds, quantity)
 
-  // all celestial objects from the celestial_object_types list will be added here
-  if (celestial_object_types[0] != 'none') {
-    for (var i = 0; i < celestial_object_types.length; i++) {
-      view.addCelestialObject(celestial_object_types[i]);
-    }
-  }
+  // ADDING GEOMETRY TO THE SCENE
+  view.addInstances();
+
 
 
   view.render();
