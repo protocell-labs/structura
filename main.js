@@ -18,6 +18,7 @@ __/\\\________/\\\____________/\\\\\\\\\\\\\\\______________/\\\\\\\\\__________
 //////GEOMETRY GENERATION//////
 
 var gDatas = [];
+var gData;
 var composition_params;
 
 // COMPOSITION - generate parameters for the composition of the piece
@@ -29,26 +30,28 @@ var stage = 6;
 var steps = get_steps(stage);
 
 // OVERRIDES
-var aspect_ratio = 0.75; // 0.75, 1.0, 1.5 - from OBSCVRVM
+var aspect_ratio = 0.5625; //// 0.5625 - 16:9 aspect ratio, 0.75 - portrait (used in O B S C V R V M)
 var explosion_type = 0; // no explosion
 
-// OLD WORKFLOW - from OBSCVRVM
-//lattice_params = generate_frame_params(6, 'narrow');
-//gData = generate_lattice(lattice_params);
-//gDatas.push(gData);
-
-
 var position = new THREE.Vector3(0, 0, 0);
-var start_bounds = 200;
-var double_sided = false;
-var triangulate = false;
 
-var start_mesh = new Tetrahedron(position.x, position.y, position.z, start_bounds, double_sided)
-var lattice_mesh = start_mesh.get_mesh();
-var lattice_mesh_target = start_mesh.get_mesh(); //JSON.parse(JSON.stringify(lattice_mesh)); //Deep Copy
+var global_rot_x = -Math.PI/16; // global rotation of the model around the X axis, -Math.PI/16
+var global_rot_y = 0; // global rotation of the model around the Y axis, Math.PI/16
 
-var gData = mesh_to_gData(lattice_mesh, lattice_mesh_target, triangulate)
+var frame_size_x = 6;
+var frame_size_y = 9;
+var frame_cell_w = 50;
+var frame_cell_h = 100;
+var frame_cell_d = 50;
+
+gData = space_frame_triprism_gData(position);
 gDatas.push(gData);
+
+console.log(gData);
+
+//position.add(new THREE.Vector3(20, 0, 50)); // translate vector
+//gData = space_frame_triprism_gData(position);
+//gDatas.push(gData);
 
 
 
@@ -140,7 +143,7 @@ function View(viewArea) {
   scene.background = new THREE.Color( 0x000000 ); //0xffffff, 0x000000
 
   const color = 0xffffff; //0xffffff
-  const intensity = 0.0; //0-1, zero works great for shadows with strong contrast
+  const amb_intensity = 0.1; //0-1, zero works great for shadows with strong contrast
 
   // ADD LIGHTING
   var light = new THREE.PointLight(0xffffff);
@@ -187,7 +190,7 @@ function View(viewArea) {
 
   scene.add(light);
 
-  const amblight = new THREE.AmbientLight(color, intensity);
+  const amblight = new THREE.AmbientLight(color, amb_intensity);
   scene.add(amblight);
 
   this.winHeight = viewportHeight;
@@ -223,36 +226,12 @@ function View(viewArea) {
   this.composer.addPass(bloomPass)
 }
 
-View.prototype.addInstances = function  () {
+
+
+View.prototype.addSpaceFrame = function () {
 
   var c_type = "standard";
-  var c_xy_scale = thickness_scale_per_stage['getting_thinner']; // how much is thickness of the member scaled for every stage
-
-  var cull_dist_bands; // culling of members happens at different rates at each of these distance bands
-  var cull_precentage_bands; // culling precentages per distance bands (first one is 100%, all members get removed)
-  var explosion_strength; // overall factor for translation during explosion - will be divided with the distance from the axis (closer to the axis, stronger the offset)
-  var explosion_rot_range; // maximum range for the random rotation angle (in radians) while applying explosion
-  var explosion_rot_reduction; // reduction of random rotation angle for each band (closer to the axis means more chaos)
-
-  if ((explosion_type == 1) || (explosion_type == 2) || (explosion_type == 3) || (explosion_type == 4)) {
-    // explosion along an axis
-    cull_dist_bands = [20, 40, 60, 80];
-    cull_precentage_bands = [1.0, 0.8, 0.6, 0.4];
-    explosion_strength = 1000;
-    explosion_rot_range = Math.PI/2;
-    explosion_rot_reduction = [1.0, 0.6, 0.3];
-  } else if ((explosion_type == 5) || (explosion_type == 6)) {
-    // explosion from a point
-    cull_dist_bands = [40, 80, 120, 160];
-    cull_precentage_bands = [1.0, 0.8, 0.6, 0.4];
-    explosion_strength = 1000;
-    explosion_rot_range = Math.PI/2;
-    explosion_rot_reduction = [1.0, 0.6, 0.3];
-  }
-
-  var triangle_radius = 0.5;
-  var debris_multiplier = 5; // multiply the number of debris particles
-  var debris_spread = 50; // distance range to randomly spread out the debris particles
+  var c_xy_scale = 2.0; // how much is thickness of the member scaled
 
   for (var n = 0; n < gDatas.length; n++) {
     var gData = gDatas[n];
@@ -262,215 +241,29 @@ View.prototype.addInstances = function  () {
     var imesh = new THREE.InstancedMesh( geometry, material, gData.links.length )
     var axis = new THREE.Vector3(0, 1, 0);
     imesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
-    var c = new THREE.Color()
-
-    var exploded_dummies = []; // array to hold our transform matrices of exploded elements so we can use them to add more debris around the explosion area
-    var debris_position_temp = new THREE.Vector3(); // temporary holder for positions of exploded members so we can use them for debris
 
     for (var i = 0; i < gData.links.length; i++) {
       var source_index = gData.links[i]['source'];
       var target_index = gData.links[i]['target'];
       var vector = new THREE.Vector3(gData.nodes[target_index].x-gData.nodes[source_index].x, gData.nodes[target_index].y-gData.nodes[source_index].y, gData.nodes[target_index].z-gData.nodes[source_index].z);
-      dummy.scale.set(c_xy_scale[gData.nodes[source_index]['stage']], gData.links[i]['value'], c_xy_scale[gData.nodes[source_index]['stage']]); // (1, gData.links[i]['value'], 1)
+      dummy.scale.set(c_xy_scale, gData.links[i]['value'], c_xy_scale); // (1, gData.links[i]['value'], 1)
       dummy.quaternion.setFromUnitVectors(axis, vector.clone().normalize());
       dummy.position.set((gData.nodes[source_index].x+gData.nodes[target_index].x)/2, (gData.nodes[source_index].y+gData.nodes[target_index].y)/2, (gData.nodes[source_index].z+gData.nodes[target_index].z)/2)
       dummy.updateMatrix();
-
-      // EXPLODING LATTICE MEMBERS
-
-      // setting default for all members not to get culled 
-      var cull_member = false;
-      var cull_member_x_axis = false;
-      var cull_member_y_axis = false;
-      
-      // in case we have to calculate explosion, proceede below, otherwise skip
-      if (explosion_type != 0) {
-
-        var dist_to_x_axis = Math.abs((gData.nodes[source_index].y + gData.nodes[target_index].y) / 2); // from member mid point to axis
-        var dist_to_y_axis = Math.abs((gData.nodes[source_index].x + gData.nodes[target_index].x) / 2); // from member mid point to axis
-        var end_to_x_axis = Math.min(Math.abs(gData.nodes[source_index].y), Math.abs(gData.nodes[target_index].y)); // from member end point to axis
-        var end_to_y_axis = Math.min(Math.abs(gData.nodes[source_index].x), Math.abs(gData.nodes[target_index].x)); // from member end point to axis
-
-        var projected_member_cent =  new THREE.Vector3((gData.nodes[source_index].x + gData.nodes[target_index].x) / 2, (gData.nodes[source_index].y + gData.nodes[target_index].y) / 2, 0);
-        var projected_source = new THREE.Vector3(gData.nodes[source_index].x, gData.nodes[source_index].y, 0);
-        var projected_target = new THREE.Vector3(gData.nodes[target_index].x, gData.nodes[target_index].y, 0);
-
-        var dist_to_cent_a = projected_member_cent.distanceTo(explosion_center_a);
-        var dist_to_cent_b = projected_member_cent.distanceTo(explosion_center_b);
-        var dist_source_to_cent_a = projected_source.distanceTo(explosion_center_a);
-        var dist_target_to_cent_a = projected_target.distanceTo(explosion_center_a);
-        var dist_end_to_cent_a = Math.min(dist_source_to_cent_a, dist_target_to_cent_a);
-        var dist_source_to_cent_b = projected_source.distanceTo(explosion_center_b);
-        var dist_target_to_cent_b = projected_target.distanceTo(explosion_center_b);
-        var dist_end_to_cent_b = Math.min(dist_source_to_cent_b, dist_target_to_cent_b);
-
-        var explosion_axis = new THREE.Vector3((gData.nodes[source_index].x + gData.nodes[target_index].x) / 2, (gData.nodes[source_index].y + gData.nodes[target_index].y) / 2, (gData.nodes[source_index].z + gData.nodes[target_index].z) / 2).normalize();
-        var dist_to_axis_explosion;
-        
-        // defining parameters for each explosion type
-        
-        if (explosion_type == 1) {
-          dist_to_axis = dist_to_x_axis;
-          dist_to_axis_explosion = dist_to_x_axis;
-          end_to_axis = end_to_x_axis;
-
-        } else if (explosion_type == 2) {
-          dist_to_axis = dist_to_x_axis;
-          dist_to_axis_explosion = dist_to_y_axis;
-          end_to_axis = end_to_x_axis;
-
-        } else if (explosion_type == 3) {
-          dist_to_axis = dist_to_y_axis;
-          dist_to_axis_explosion = dist_to_y_axis;
-          end_to_axis = end_to_y_axis;
-
-        } else if (explosion_type == 4) {
-          dist_to_axis = dist_to_y_axis;
-          dist_to_axis_explosion = dist_to_x_axis;
-          end_to_axis = end_to_y_axis;
-
-        } else if (explosion_type == 5) {
-          dist_to_axis = dist_to_cent_a;
-          dist_to_axis_explosion = dist_to_cent_a;
-          end_to_axis = dist_end_to_cent_a;
-
-        } else if (explosion_type == 6) {
-          dist_to_axis = Math.min(dist_to_cent_a, dist_to_cent_b);
-          dist_to_axis_explosion = Math.min(dist_to_cent_a, dist_to_cent_b);
-          end_to_axis = Math.min(dist_end_to_cent_a, dist_end_to_cent_b);
-        }
-
-
-        if ((end_to_axis < cull_dist_bands[0]) || (dist_to_axis < cull_dist_bands[0])) {
-          // apply explosion offset and random rotation for member within the explosion zone
-          dummy.translateOnAxis(explosion_axis, explosion_strength / dist_to_axis_explosion);
-          dummy.updateMatrix();
-          // first band, closest, every member gets culled
-          if (gene() < cull_precentage_bands[0]) {
-            cull_member_x_axis = true;
-            debris_position_temp = new THREE.Vector3((gData.nodes[source_index].x+gData.nodes[target_index].x)/2, (gData.nodes[source_index].y+gData.nodes[target_index].y)/2, (gData.nodes[source_index].z+gData.nodes[target_index].z)/2);
-            debris_position_temp.add(explosion_axis.multiplyScalar(explosion_strength / dist_to_axis_explosion)); // debris will be pushed away from the axis the same as the members
-            for (var d = 0; d < debris_multiplier; d++) {exploded_dummies.push(debris_position_temp);}
-          }
-
-        } else if ((end_to_axis < cull_dist_bands[1]) || (dist_to_axis < cull_dist_bands[1])) {
-          // apply explosion offset and random rotation for member within the explosion zone
-          dummy.translateOnAxis(explosion_axis, explosion_strength / dist_to_axis_explosion);
-          dummy.rotateX(explosion_rot_reduction[0] * (gene() * explosion_rot_range * 2 - explosion_rot_range));
-          dummy.rotateY(explosion_rot_reduction[0] * (gene() * explosion_rot_range * 2 - explosion_rot_range));
-          dummy.rotateZ(explosion_rot_reduction[0] * (gene() * explosion_rot_range * 2 - explosion_rot_range));
-          dummy.updateMatrix();
-          // second band, 80% of members get culled
-          if (gene() < cull_precentage_bands[1]) {
-            cull_member_x_axis = true;
-            debris_position_temp = new THREE.Vector3((gData.nodes[source_index].x+gData.nodes[target_index].x)/2, (gData.nodes[source_index].y+gData.nodes[target_index].y)/2, (gData.nodes[source_index].z+gData.nodes[target_index].z)/2);
-            debris_position_temp.add(explosion_axis.multiplyScalar(explosion_strength / dist_to_axis_explosion)); // debris will be pushed away from the axis the same as the members
-            for (var d = 0; d < debris_multiplier; d++) {exploded_dummies.push(debris_position_temp);}
-          }
-
-        } else if ((end_to_axis < cull_dist_bands[2]) || (dist_to_axis < cull_dist_bands[2])) {
-          // apply explosion offset and random rotation for member within the explosion zone
-          dummy.translateOnAxis(explosion_axis, explosion_strength / dist_to_axis_explosion);
-          dummy.rotateX(explosion_rot_reduction[1] * (gene() * explosion_rot_range * 2 - explosion_rot_range));
-          dummy.rotateY(explosion_rot_reduction[1] * (gene() * explosion_rot_range * 2 - explosion_rot_range));
-          dummy.rotateZ(explosion_rot_reduction[1] * (gene() * explosion_rot_range * 2 - explosion_rot_range));
-          dummy.updateMatrix();
-          // third band, 60% of members get culled
-          if (gene() < cull_precentage_bands[2]) {
-            cull_member_x_axis = true;
-            debris_position_temp = new THREE.Vector3((gData.nodes[source_index].x+gData.nodes[target_index].x)/2, (gData.nodes[source_index].y+gData.nodes[target_index].y)/2, (gData.nodes[source_index].z+gData.nodes[target_index].z)/2);
-            debris_position_temp.add(explosion_axis.multiplyScalar(explosion_strength / dist_to_axis_explosion)); // debris will be pushed away from the axis the same as the members
-            for (var d = 0; d < debris_multiplier; d++) {exploded_dummies.push(debris_position_temp);}
-          }
-
-        } else if ((end_to_axis < cull_dist_bands[3]) || (dist_to_axis < cull_dist_bands[3])) {
-          // apply explosion offset and random rotation for member within the explosion zone
-          dummy.translateOnAxis(explosion_axis, explosion_strength / dist_to_axis_explosion);
-          dummy.rotateX(explosion_rot_reduction[2] * (gene() * explosion_rot_range * 2 - explosion_rot_range));
-          dummy.rotateY(explosion_rot_reduction[2] * (gene() * explosion_rot_range * 2 - explosion_rot_range));
-          dummy.rotateZ(explosion_rot_reduction[2] * (gene() * explosion_rot_range * 2 - explosion_rot_range));
-          dummy.updateMatrix();
-          // third band, 40% of members get culled
-          if (gene() < cull_precentage_bands[3]) {
-            cull_member_x_axis = true;
-            debris_position_temp = new THREE.Vector3((gData.nodes[source_index].x+gData.nodes[target_index].x)/2, (gData.nodes[source_index].y+gData.nodes[target_index].y)/2, (gData.nodes[source_index].z+gData.nodes[target_index].z)/2);
-            debris_position_temp.add(explosion_axis.multiplyScalar(explosion_strength / dist_to_axis_explosion)); // debris will be pushed away from the axis the same as the members
-            for (var d = 0; d < debris_multiplier; d++) {exploded_dummies.push(debris_position_temp);}
-          }
-        }
-
-        cull_member = cull_member_x_axis;
-
-      }
-      // end of explosion part
-
-      // cull_member is set per default to false, unless explosion part above defined it to be true
-      if (!cull_member) {
-        imesh.setMatrixAt( i, dummy.matrix );
-      }
-
+      imesh.setMatrixAt(i, dummy.matrix);
     }
 
-    imesh.instanceMatrix.needsUpdate = true
+    // global rotation of the instanced mesh
+    imesh.rotateX(global_rot_x);
+    imesh.rotateY(global_rot_y);
 
+    imesh.instanceMatrix.needsUpdate = true
     imesh.castShadow = true;
     imesh.receiveShadow = true;
 
     this.scene.add(imesh);
-
-    //ref.current.instanceMatrix.needsUpdate = true
-
-
-    // EXPLOSION DUST CLOUD
-
-    // one triangle
-    const vertices = [
-      0, 1, 0, // top
-      1, 0, 0, // right
-      -1, 0, 0 // left
-    ];
-    const faces = [ 2, 1, 0 ]; // only one face
-    
-    var dummy = new THREE.Object3D();
-    var triangle = new THREE.PolyhedronGeometry(vertices, faces, triangle_radius, 0);
-    triangle.scale(0.5, 10, 0.5);
-    var imesh_debris = new THREE.InstancedMesh( triangle, material, exploded_dummies.length )
-    imesh_debris.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
-
-    //console.log('exploded_dummies.length ->', exploded_dummies.length);
-    //console.log(exploded_dummies);
-
-    for (var i = 0; i < exploded_dummies.length; i++) {
-      dummy.position.set(exploded_dummies[i].x, exploded_dummies[i].y, exploded_dummies[i].z);
-      var random_axis = new THREE.Vector3(gene() * 2 - 1, gene() * 2 - 1, gene() * 2 - 1).normalize();
-      dummy.translateOnAxis(random_axis, gene() * debris_spread);
-
-      var uniscale = 0.2 + gene();
-      dummy.scale.set(uniscale, uniscale, uniscale); //Dynamically assign this to give different sizes (eg add attribute to nData.nodes and call it here)
-      
-      dummy.rotateX(gene() * Math.PI/3 - Math.PI/6);
-      dummy.rotateY(gene() * Math.PI/3 - Math.PI/6);
-      dummy.rotateZ(gene() * Math.PI/3 - Math.PI/6);
-
-      dummy.updateMatrix();
-      imesh_debris.setMatrixAt( i, dummy.matrix );
-
-    }
-
-
-    imesh_debris.instanceMatrix.needsUpdate = true
-    //imesh_debris.castShadow = true; // remove for performance
-    imesh_debris.receiveShadow = true;
-    this.scene.add(imesh_debris);
   }
-
 }
-
-
-
-
-
-
 
 
 
@@ -632,7 +425,7 @@ function Controller(viewArea) {
 
 
   // ADDING GEOMETRY TO THE SCENE
-  view.addInstances();
+  view.addSpaceFrame();
 
 
 
@@ -743,7 +536,7 @@ function capturer_custom_save() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `OBSCVRVM_${parseInt(Math.random()*10000000)}.gif`;
+      a.download = `VERSE_${parseInt(Math.random()*10000000)}.gif`;
       a.click();
       URL.revokeObjectURL(url);
       });
@@ -876,7 +669,7 @@ const capture = (contx) => {
     const urlBase64 = renderer.domElement.toDataURL('img/png'); 
     const a = document.createElement("a");
     a.href = urlBase64;
-    a.download = `OBSCVRVM_${parseInt(Math.random()*10000000)}.png`;
+    a.download = `VERSE_${parseInt(Math.random()*10000000)}.png`;
     a.click();
     URL.revokeObjectURL(urlBase64);
   }  

@@ -537,6 +537,57 @@ class Hexahedron {
   }
 }
 
+class TriPrism {
+  constructor (cx=0, cy=0, cz=0, a=1, b=1, c=1, ds=false) {
+    this.loc = new Vector(cx, cy, cz);
+    this.a = a;
+    this.b = b;
+    this.c = c;
+    this.ds = ds;
+  }
+
+  get_mesh() {
+    const m = new Mesh();
+
+    var ha = this.a/2.0;
+    var hb = this.b/2.0;
+    var hc = this.c/2.0;
+    const nodes = [];
+
+    nodes.push(new Node(0, hb, -hc, 0)); // ridge of the pyramid
+    nodes.push(new Node(0, -hb, -hc, 0)); // ridge of the pyramid
+    nodes.push(new Node(-ha, -hb, hc, 0)); // base of the pyramid
+    nodes.push(new Node(ha, -hb, hc, 0)); // base of the pyramid
+    nodes.push(new Node(ha, hb, hc, 0)); // base of the pyramid
+    nodes.push(new Node(-ha, hb, hc, 0)); // base of the pyramid
+
+    for (var i = 0; i < nodes.length; i++) {
+      var vadd = nodes[i].add(this.loc);
+      nodes[i] = new Node(vadd.components[0], vadd.components[1], vadd.components[2], 0);
+    }
+
+    m.add_face(new Face([nodes[2], nodes[3], nodes[4], nodes[5]])); // base of the pyramid
+    m.add_face(new Face([nodes[0], nodes[1], nodes[5]])); // triangulated quad side of the pyramid
+    m.add_face(new Face([nodes[1], nodes[2], nodes[5]])); // triangulated quad side of the pyramid
+    m.add_face(new Face([nodes[0], nodes[3], nodes[1]])); // triangulated quad side of the pyramid
+    m.add_face(new Face([nodes[0], nodes[4], nodes[3]])); // triangulated quad side of the pyramid
+    m.add_face(new Face([nodes[2], nodes[1], nodes[3]])); // side triangle of the pyramid
+    m.add_face(new Face([nodes[0], nodes[5], nodes[4]])); // side triangle of the pyramid
+
+    /*
+    if (this.ds == true) {
+      m.add_face(new Face([nodes[0], nodes[1], nodes[2], nodes[3]]));
+      m.add_face(new Face([nodes[7], nodes[6], nodes[5], nodes[4]]));
+      m.add_face(new Face([nodes[4], nodes[5], nodes[1], nodes[0]]));
+      m.add_face(new Face([nodes[6], nodes[7], nodes[3], nodes[2]]));
+      m.add_face(new Face([nodes[5], nodes[6], nodes[2], nodes[1]]));
+      m.add_face(new Face([nodes[0], nodes[3], nodes[7], nodes[4]]));
+    }*/
+
+    return m
+  }
+}
+
 class Dodecahedron {
   constructor (cx=0, cy=0, cz=0, rad=1, ds=false) {
     this.loc = new Vector(cx, cy, cz)
@@ -806,6 +857,113 @@ function mesh_to_gData(mesh, targetmesh, triangulate=false, debug=false) {
   //console.log("MESH FACES: "+ gData.mesh.length)
   if (debug){
     console.timeEnd("mesh => gData")
+  }
+
+  return gData;
+}
+
+
+function space_frame_triprism_gData(origin = new THREE.Vector3(0, 0, 0)) {
+
+  var gData = {'nodes': [], 'links': [], 'mesh': []};
+  var node_counter = 0;
+
+  var frame_size_upper_grid = frame_size_x * frame_size_y;
+
+  // upper rectangle grid
+  for (var i = 0; i < frame_size_x; i++) {
+    for (var j = 0; j < frame_size_y; j++) {
+
+      var node_position_x = i * frame_cell_w - ((frame_size_x - 1) * frame_cell_w) / 2.0 + origin.x;
+      var node_position_y = j * frame_cell_h - ((frame_size_y - 1) * frame_cell_h) / 2.0 + origin.y;
+      var node_position_z = 0 + origin.z;
+
+      gData['nodes'].push({'id':node_counter, 'connectivity': 0, 'visible':false, 'x':node_position_x,'y':node_position_y,'z':node_position_z,'stage':1});
+      
+      // up link
+      if (j != frame_size_y - 1) {
+        gData['links'].push({'source':node_counter, 'target': node_counter + 1, 'value': frame_cell_h, 'state': 0, 'visible':true});
+      }
+
+      // right link
+      if (i != frame_size_x - 1) {
+        gData['links'].push({'source':node_counter, 'target': node_counter + frame_size_y, 'value': frame_cell_w, 'state': 0, 'visible':true});
+      }
+
+      node_counter ++
+    }
+  }
+
+  // lower rectangle grid - smaller by one cell in width and shifted
+  for (var i = 0; i < frame_size_x - 1; i++) {
+    for (var j = 0; j < frame_size_y; j++) {
+
+      var node_position_x = i * frame_cell_w - ((frame_size_x - 1) * frame_cell_w) / 2.0 + origin.x + frame_cell_w / 2.0;
+      var node_position_y = j * frame_cell_h - ((frame_size_y - 1) * frame_cell_h) / 2.0 + origin.y;
+      var node_position_z = origin.z - frame_cell_d;
+
+      gData['nodes'].push({'id':node_counter, 'connectivity': 0, 'visible':false, 'x':node_position_x,'y':node_position_y,'z':node_position_z,'stage':1});
+      
+      // up link
+      if (j != frame_size_y - 1) {
+        gData['links'].push({'source':node_counter, 'target': node_counter + 1, 'value': frame_cell_h, 'state': 0, 'visible':true});
+      }
+
+      // right link
+      if (i != frame_size_x - 2) {
+        gData['links'].push({'source':node_counter, 'target': node_counter + frame_size_y, 'value': frame_cell_w, 'state': 0, 'visible':true});
+      }
+
+      node_counter ++
+    }
+  }
+
+
+  var node_counter = 0; // reset the node counter as we will be iterating from the first node to create the cross-links
+
+  var cross_link_a_length = 70;
+  var cross_link_b_length = 70;
+  var cross_link_c_length = 125;
+  var cross_link_d_length = 125;
+  var cross_link_e_length = 125;
+  var cross_link_f_length = 125;
+
+  // cross-links between rectangular grids
+  for (var i = 0; i < frame_size_x; i++) {
+    for (var j = 0; j < frame_size_y; j++) {
+
+      // cross-link a
+      if (i != frame_size_x - 1) {
+        gData['links'].push({'source':node_counter, 'target': node_counter + frame_size_upper_grid, 'value': cross_link_a_length, 'state': 0, 'visible':true});
+      }
+
+      // cross-link b
+      if (i != 0) {
+        gData['links'].push({'source':node_counter, 'target': node_counter + frame_size_upper_grid - frame_size_y, 'value': cross_link_b_length, 'state': 0, 'visible':true});
+      }
+
+      // cross-link c
+      if ((i != frame_size_x - 1) && (j != frame_size_y - 1)) {
+        gData['links'].push({'source':node_counter, 'target': node_counter + frame_size_upper_grid + 1, 'value': cross_link_c_length, 'state': 0, 'visible':true});
+      }
+
+      // cross-link d
+      if ((i != 0) && (j != frame_size_y - 1)) {
+        gData['links'].push({'source':node_counter, 'target': node_counter + frame_size_upper_grid - frame_size_y + 1, 'value': cross_link_d_length, 'state': 0, 'visible':true});
+      }
+
+      // cross-link e
+      if ((j != 0) && (i != frame_size_x - 1)) {
+        gData['links'].push({'source':node_counter, 'target': node_counter + frame_size_upper_grid - 1, 'value': cross_link_e_length, 'state': 0, 'visible':true});
+      }
+
+      // cross-link f
+      if ((j != 0) && (i != 0)) {
+        gData['links'].push({'source':node_counter, 'target': node_counter + frame_size_upper_grid - frame_size_y - 1, 'value': cross_link_f_length, 'state': 0, 'visible':true});
+      }
+
+      node_counter ++
+    }
   }
 
   return gData;
