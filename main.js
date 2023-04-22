@@ -19,34 +19,29 @@ __/\\\________/\\\____________/\\\\\\\\\\\\\\\______________/\\\\\\\\\__________
 
 var gDatas = [];
 var gData;
-var composition_params;
-
-// COMPOSITION - generate parameters for the composition of the piece
-composition_params = generate_composition_params(); // all input parameters are optional, they will be chosen at random if not passed into the function
 
 // WORKAROUND - to remove later
-var { aspect_ratio, frame_type, center_piece_type, center_piece_factor, explosion_type, light_source_type, explosion_center_a, explosion_center_b, celestial_object_types, feature_dimension, feature_frame, feature_primitive, feature_state, feature_celestial } = composition_params; // unpacking parameters we need in main.js and turning them into globals
 var stage = 6;
 var steps = get_steps(stage);
-var light_source_type = "south";
 
 // OVERRIDES
 var aspect_ratio = 0.5625; //// 0.5625 - 16:9 aspect ratio, 0.75 - portrait (used in O B S C V R V M)
 var explosion_type = 0; // no explosion
+var light_source_type = "south";
 
 var position = new THREE.Vector3(0, 0, 0);
 
 var global_rot_x = -Math.PI/16; // global rotation of the model around the X axis, -Math.PI/16
 var global_rot_y = 0; // global rotation of the model around the Y axis, Math.PI/16
 
-var frame_size_x = 12; // 6
-var frame_size_y = 18; // 9
-var frame_cell_w = 25; // 50
-var frame_cell_h = 50; // 100
-var frame_cell_d = 25; // 50
+var frame_size_x = 15; // 6, 12
+var frame_size_y = 25; // 9, 18
+var frame_cell_w = 25; // 50, 25
+var frame_cell_h = 35; // 100, 50
+var frame_cell_d = 25; // 50, 25
 
 //                           [vert, hor,  a,    b,    c,    d,    e,    f,    g_u,  h_u,  g_l,  h_l]
-var frame_links_visibility = [true, true, true, true, false, false, false, false, true, true, true, true];
+var frame_links_visibility = [true, true, true, true, true, true, true, true, false, false, false, false];
 var frame_links_thickness  = [1.5,  1.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  1.0,  1.0,  1.0,  1.0];
 var alternating_cd_ef = true;
 var alternating_gu_hu = true;
@@ -54,14 +49,28 @@ var alternating_gu_hu_pattern = 1; // options: 1, 2, 3, 4, 5 - visible only if a
 var alternating_gl_hl = true;
 var alternating_gl_hl_pattern = 1; // options: 1, 2, 3, 4, 5 - visible only if alternating_gl_hl_pattern = true
 
+var noise_shift_x = gene() * 100;
+var noise_shift_y = gene() * 100;
+var noise_shift_z = gene() * 100;
+var noise_scale_x = 0.005; // 0.005
+var noise_scale_y = 0.005; // 0.005
+var noise_scale_z = 0.005; // 0.005
+var noise_factor = 10.0; // 10.0
+var noise_component_offset = 1.0;
+
+var modulate_x = true;
+var modulate_y = true;
+var modulate_z = true;
+
+var cutoff_vert_links = frame_cell_h * 2.0;
+var cutoff_hor_links = frame_cell_w * 2.0;
+var cutoff_cdef_links = frame_cell_h * 2.0;
+var cutoff_gh_links = frame_cell_h * 2.0;
+
+
 gData = space_frame_triprism_gData(position);
 gDatas.push(gData);
 
-console.log(gData);
-
-//position.add(new THREE.Vector3(20, 0, 50)); // translate vector
-//gData = space_frame_triprism_gData(position);
-//gDatas.push(gData);
 
 
 
@@ -150,7 +159,7 @@ function View(viewArea) {
   composer.setSize(window.innerWidth, window.innerHeight)
 
   // change scene background to solid color
-  scene.background = new THREE.Color( 0x000000 ); //0xffffff, 0x000000
+  scene.background = new THREE.Color('#080808'); //0xffffff, 0x000000
 
   const color = 0xffffff; //0xffffff
   const amb_intensity = 0.1; //0-1, zero works great for shadows with strong contrast
