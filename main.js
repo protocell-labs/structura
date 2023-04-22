@@ -28,6 +28,7 @@ composition_params = generate_composition_params(); // all input parameters are 
 var { aspect_ratio, frame_type, center_piece_type, center_piece_factor, explosion_type, light_source_type, explosion_center_a, explosion_center_b, celestial_object_types, feature_dimension, feature_frame, feature_primitive, feature_state, feature_celestial } = composition_params; // unpacking parameters we need in main.js and turning them into globals
 var stage = 6;
 var steps = get_steps(stage);
+var light_source_type = "south";
 
 // OVERRIDES
 var aspect_ratio = 0.5625; //// 0.5625 - 16:9 aspect ratio, 0.75 - portrait (used in O B S C V R V M)
@@ -38,11 +39,20 @@ var position = new THREE.Vector3(0, 0, 0);
 var global_rot_x = -Math.PI/16; // global rotation of the model around the X axis, -Math.PI/16
 var global_rot_y = 0; // global rotation of the model around the Y axis, Math.PI/16
 
-var frame_size_x = 6;
-var frame_size_y = 9;
-var frame_cell_w = 50;
-var frame_cell_h = 100;
-var frame_cell_d = 50;
+var frame_size_x = 12; // 6
+var frame_size_y = 18; // 9
+var frame_cell_w = 25; // 50
+var frame_cell_h = 50; // 100
+var frame_cell_d = 25; // 50
+
+//                           [vert, hor,  a,    b,    c,    d,    e,    f,    g_u,  h_u,  g_l,  h_l]
+var frame_links_visibility = [true, true, true, true, false, false, false, false, true, true, true, true];
+var frame_links_thickness  = [1.5,  1.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  1.0,  1.0,  1.0,  1.0];
+var alternating_cd_ef = true;
+var alternating_gu_hu = true;
+var alternating_gu_hu_pattern = 1; // options: 1, 2, 3, 4, 5 - visible only if alternating_gu_hu_pattern = true
+var alternating_gl_hl = true;
+var alternating_gl_hl_pattern = 1; // options: 1, 2, 3, 4, 5 - visible only if alternating_gl_hl_pattern = true
 
 gData = space_frame_triprism_gData(position);
 gDatas.push(gData);
@@ -216,7 +226,7 @@ function View(viewArea) {
   const effectFXAA = new THREE.ShaderPass( THREE.FXAAShader );
   effectFXAA.uniforms[ 'resolution' ].value.x = 1 / ( window.innerWidth * window.devicePixelRatio );
   effectFXAA.uniforms[ 'resolution' ].value.y = 1 / ( window.innerHeight * window.devicePixelRatio );
-  this.composer.addPass( effectFXAA );   
+  //this.composer.addPass( effectFXAA );   
 
   //Bloom
   const bloomPass = new THREE.UnrealBloomPass();
@@ -231,7 +241,6 @@ function View(viewArea) {
 View.prototype.addSpaceFrame = function () {
 
   var c_type = "standard";
-  var c_xy_scale = 2.0; // how much is thickness of the member scaled
 
   for (var n = 0; n < gDatas.length; n++) {
     var gData = gDatas[n];
@@ -243,10 +252,11 @@ View.prototype.addSpaceFrame = function () {
     imesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
 
     for (var i = 0; i < gData.links.length; i++) {
+      if (gData.links[i]['visible'] == false) {continue;} // early termination - skip this link if it is not visible
       var source_index = gData.links[i]['source'];
       var target_index = gData.links[i]['target'];
       var vector = new THREE.Vector3(gData.nodes[target_index].x-gData.nodes[source_index].x, gData.nodes[target_index].y-gData.nodes[source_index].y, gData.nodes[target_index].z-gData.nodes[source_index].z);
-      dummy.scale.set(c_xy_scale, gData.links[i]['value'], c_xy_scale); // (1, gData.links[i]['value'], 1)
+      dummy.scale.set(gData.links[i]['thickness'], gData.links[i]['value'], gData.links[i]['thickness']); // (1, gData.links[i]['value'], 1)
       dummy.quaternion.setFromUnitVectors(axis, vector.clone().normalize());
       dummy.position.set((gData.nodes[source_index].x+gData.nodes[target_index].x)/2, (gData.nodes[source_index].y+gData.nodes[target_index].y)/2, (gData.nodes[source_index].z+gData.nodes[target_index].z)/2)
       dummy.updateMatrix();
