@@ -32,20 +32,27 @@ var light_source_type = "south";
 var global_rot_x = -Math.PI/16; // global rotation of the model around the X axis, -Math.PI/16
 var global_rot_y = 0; // global rotation of the model around the Y axis, Math.PI/16
 
-var total_frame_size_x = 8; // 6, 12, 10
-var total_frame_size_y = 12; // 9, 18, 23
-var frame_cell_w = 50; // 50, 25, 25
-var frame_cell_h = 70; // 100, 50, 35
+var total_frame_size_x = 13; // 6, 12, 10
+var total_frame_size_y = 20; // 9, 18, 23
+var frame_cell_w = 25; // 50, 25, 25
+var frame_cell_h = 40; // 100, 50, 35
 var frame_cell_d = 25; // 50, 25, 25
 
 //                           [vert, hor,  a,    b,    c,    d,    e,    f,    g_u,  h_u,  g_l,  h_l]
-var frame_links_visibility = [true, true, true, true, true, true, true, true, false, false, false, false];
-var frame_links_thickness  = [3.5,  3.5,  2.5,  2.5,  2.5,  2.5,  2.5,  2.5,  1.0,  1.0,  1.0,  1.0];
+var frame_links_visibility = [true, true, true, true, true, true, true, true, true, true, true, true];
+var frame_links_thickness  = [1.5,  1.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  1.0,  1.0,  1.0,  1.0];
+var links_length_reduction = [1.00, 0.85, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90];
 var alternating_cd_ef = true;
 var alternating_gu_hu = true;
 var alternating_gu_hu_pattern = 1; // options: 1, 2, 3, 4, 5 - visible only if alternating_gu_hu_pattern = true
 var alternating_gl_hl = true;
 var alternating_gl_hl_pattern = 1; // options: 1, 2, 3, 4, 5 - visible only if alternating_gl_hl_pattern = true
+
+var joint_visibility = true; // joint at vertical links
+var joint_length = frame_links_thickness[0]; // joint at vertical links
+var joint_thickness_f = frame_links_thickness[0] * 3; // joint at vertical links
+var tightener_length_reduction = 0.1; // detail in the middle of cross-links c, d, e, f, g, h
+var tightener_thickness_f = 1.5; // detail in the middle of cross-links c, d, e, f, g, h
 
 var noise_shift_x = gene_range(-100, 100);
 var noise_shift_y = gene_range(-100, 100);
@@ -89,7 +96,6 @@ for (var i = 0; i < nr_of_stripes; i++) {
   console.log("#", i, "stripe ->", x_placement);
 }
 
-console.log(Math.random());
 
 
 //////CONSOLE LOG//////
@@ -272,8 +278,10 @@ View.prototype.addSpaceFrame = function () {
   for (var n = 0; n < gDatas.length; n++) {
     var gData = gDatas[n];
     var dummy = new THREE.Object3D()
-    var geometry = new THREE.CylinderGeometry( cylinder_params[c_type][0], cylinder_params[c_type][1], cylinder_params[c_type][2], cylinder_params[c_type][3], cylinder_params[c_type][4], true );
+    var geometry = new THREE.CylinderGeometry( cylinder_params[c_type][0], cylinder_params[c_type][1], cylinder_params[c_type][2], cylinder_params[c_type][3], cylinder_params[c_type][4], false ); // capped cylinder
     var material = new THREE.MeshPhongMaterial( {color: 0xffffff} ); //THREE.MeshBasicMaterial( {color: 0xff0000} ); THREE.MeshNormalMaterial();
+    
+    // LINKS
     var imesh = new THREE.InstancedMesh( geometry, material, gData.links.length )
     var axis = new THREE.Vector3(0, 1, 0);
     imesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
@@ -290,7 +298,32 @@ View.prototype.addSpaceFrame = function () {
       imesh.setMatrixAt(i, dummy.matrix);
     }
 
+    // global rotation of the instanced mesh
+    imesh.rotateX(global_rot_x);
+    imesh.rotateY(global_rot_y);
 
+    imesh.instanceMatrix.needsUpdate = true
+    imesh.castShadow = true;
+    imesh.receiveShadow = true;
+    this.scene.add(imesh);
+
+
+    // JOINTS
+    var imesh = new THREE.InstancedMesh( geometry, material, gData.joints.length )
+    var axis = new THREE.Vector3(0, 1, 0);
+    imesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
+
+    for (var i = 0; i < gData.joints.length; i++) {
+      if (gData.joints[i]['visible'] == false) {continue;} // early termination - skip this joint if it is not visible
+      var source_index = gData.joints[i]['source'];
+      var target_index = gData.joints[i]['target'];
+      var vector = new THREE.Vector3(gData.nodes[target_index].x-gData.nodes[source_index].x, gData.nodes[target_index].y-gData.nodes[source_index].y, gData.nodes[target_index].z-gData.nodes[source_index].z);
+      dummy.scale.set(gData.joints[i]['thickness'], gData.joints[i]['value'], gData.joints[i]['thickness']); // (1, gData.joints[i]['value'], 1)
+      dummy.quaternion.setFromUnitVectors(axis, vector.clone().normalize());
+      dummy.position.set(gData.nodes[source_index].x, gData.nodes[source_index].y, gData.nodes[source_index].z)
+      dummy.updateMatrix();
+      imesh.setMatrixAt(i, dummy.matrix);
+    }
 
     // global rotation of the instanced mesh
     imesh.rotateX(global_rot_x);
@@ -299,8 +332,9 @@ View.prototype.addSpaceFrame = function () {
     imesh.instanceMatrix.needsUpdate = true
     imesh.castShadow = true;
     imesh.receiveShadow = true;
-
     this.scene.add(imesh);
+
+
   }
 }
 

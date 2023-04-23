@@ -876,7 +876,7 @@ function space_frame_triprism_gData(origin = new THREE.Vector3(0, 0, 0)) {
   var node_position_z, node_position_y, node_position_z;
   var noise_value_x, noise_value_y, noise_value_z;
 
-  var gData = {'nodes': [], 'links': [], 'mesh': []};
+  var gData = {'nodes': [], 'links': [], 'joints': [], 'mesh': []};
   var node_counter = 0;
   var frame_size_upper_grid = frame_size_x * frame_size_y;
 
@@ -915,7 +915,7 @@ function space_frame_triprism_gData(origin = new THREE.Vector3(0, 0, 0)) {
       // vertical link
       if (j != frame_size_y - 1) {
         target_idx = node_counter + 1;
-        link_length = calculate_link_length(gData['nodes'][source_idx], gData['nodes'][target_idx]);
+        link_length = calculate_link_length(gData['nodes'][source_idx], gData['nodes'][target_idx]) * links_length_reduction[0];
         link_visibility = link_length > cutoff_vert_links ? false : frame_links_visibility[0];
         gData['links'].push({'source': source_idx, 'target': target_idx, 'value': link_length, 'thickness': frame_links_thickness[0], 'state': 0, 'visible': link_visibility});
       }
@@ -923,9 +923,18 @@ function space_frame_triprism_gData(origin = new THREE.Vector3(0, 0, 0)) {
       // horizontal link
       if (i != frame_size_x - 1) {
         target_idx = node_counter + frame_size_y;
-        link_length = calculate_link_length(gData['nodes'][source_idx], gData['nodes'][target_idx]);
+        link_length = calculate_link_length(gData['nodes'][source_idx], gData['nodes'][target_idx]) * links_length_reduction[1];
         link_visibility = link_length > cutoff_hor_links ? false : frame_links_visibility[1];
         gData['links'].push({'source': source_idx, 'target': target_idx, 'value': link_length, 'thickness': frame_links_thickness[1], 'state': 0, 'visible': link_visibility});
+      }
+
+      // joints - at vertical links
+      if (j != frame_size_y - 1) {
+        target_idx = node_counter + 1;
+        gData['joints'].push({'source': source_idx, 'target': target_idx, 'value': joint_length, 'thickness': joint_thickness_f, 'state': 0, 'visible': joint_visibility});
+      } else { // when we come to the top row, we need to point to the previous node, not the next one
+        target_idx = node_counter - 1;
+        gData['joints'].push({'source': source_idx, 'target': target_idx, 'value': joint_length, 'thickness': joint_thickness_f, 'state': 0, 'visible': joint_visibility});
       }
 
       node_counter ++
@@ -967,7 +976,7 @@ function space_frame_triprism_gData(origin = new THREE.Vector3(0, 0, 0)) {
       // vertical link
       if (j != frame_size_y - 1) {
         target_idx = node_counter + 1;
-        link_length = calculate_link_length(gData['nodes'][source_idx], gData['nodes'][target_idx]);
+        link_length = calculate_link_length(gData['nodes'][source_idx], gData['nodes'][target_idx]) * links_length_reduction[0];
         link_visibility = link_length > cutoff_vert_links ? false : frame_links_visibility[0];
         gData['links'].push({'source': source_idx, 'target': target_idx, 'value': link_length, 'thickness': frame_links_thickness[0], 'state': 0, 'visible': link_visibility});
       }
@@ -975,9 +984,18 @@ function space_frame_triprism_gData(origin = new THREE.Vector3(0, 0, 0)) {
       // horizontal link
       if (i != frame_size_x - 2) {
         target_idx = node_counter + frame_size_y;
-        link_length = calculate_link_length(gData['nodes'][source_idx], gData['nodes'][target_idx]);
+        link_length = calculate_link_length(gData['nodes'][source_idx], gData['nodes'][target_idx]) * links_length_reduction[1];
         link_visibility = link_length > cutoff_hor_links ? false : frame_links_visibility[1];
         gData['links'].push({'source': source_idx, 'target': target_idx, 'value': link_length, 'thickness': frame_links_thickness[1], 'state': 0, 'visible': link_visibility});
+      }
+
+      // joints - at vertical links
+      if (j != frame_size_y - 1) {
+        target_idx = node_counter + 1;
+        gData['joints'].push({'source': source_idx, 'target': target_idx, 'value': joint_length, 'thickness': joint_thickness_f, 'state': 0, 'visible': joint_visibility});
+      } else { // when we come to the top row, we need to point to the previous node, not the next one
+        target_idx = node_counter - 1;
+        gData['joints'].push({'source': source_idx, 'target': target_idx, 'value': joint_length, 'thickness': joint_thickness_f, 'state': 0, 'visible': joint_visibility});
       }
 
       node_counter ++
@@ -995,49 +1013,60 @@ function space_frame_triprism_gData(origin = new THREE.Vector3(0, 0, 0)) {
       // cross-link a
       if (i != frame_size_x - 1) {
         target_idx = node_counter + frame_size_upper_grid;
-        link_length = calculate_link_length(gData['nodes'][source_idx], gData['nodes'][target_idx]);
+        link_length = calculate_link_length(gData['nodes'][source_idx], gData['nodes'][target_idx]) * links_length_reduction[2];
         gData['links'].push({'source': source_idx, 'target': target_idx, 'value': link_length, 'thickness': frame_links_thickness[2], 'state': 0, 'visible': frame_links_visibility[2]});
       }
 
       // cross-link b
       if (i != 0) {
         target_idx = node_counter + frame_size_upper_grid - frame_size_y;
-        link_length = calculate_link_length(gData['nodes'][source_idx], gData['nodes'][target_idx]);
+        link_length = calculate_link_length(gData['nodes'][source_idx], gData['nodes'][target_idx]) * links_length_reduction[3];
         gData['links'].push({'source': source_idx, 'target': target_idx, 'value': link_length, 'thickness': frame_links_thickness[3], 'state': 0, 'visible': frame_links_visibility[3]});
       }
 
       // cross-link c
       if ((i != frame_size_x - 1) && (j != frame_size_y - 1) && !((j % 2 == 0) && alternating_cd_ef)) {
         target_idx = node_counter + frame_size_upper_grid + 1;
-        link_length = calculate_link_length(gData['nodes'][source_idx], gData['nodes'][target_idx]);
+        link_length = calculate_link_length(gData['nodes'][source_idx], gData['nodes'][target_idx]) * links_length_reduction[4];
         link_visibility = link_length > cutoff_cdef_links ? false : frame_links_visibility[4];
         gData['links'].push({'source': source_idx, 'target': target_idx, 'value': link_length, 'thickness': frame_links_thickness[4], 'state': 0, 'visible': link_visibility});
+        //detail part - at cross-link c in the middle
+        var tightener_length = link_length * tightener_length_reduction;
+        gData['links'].push({'source': source_idx, 'target': target_idx, 'value': tightener_length, 'thickness': frame_links_thickness[4] * tightener_thickness_f, 'state': 0, 'visible': link_visibility});
       }
 
       // cross-link d
       if ((i != 0) && (j != frame_size_y - 1) && !((j % 2 == 0) && alternating_cd_ef)) {
         target_idx = node_counter + frame_size_upper_grid - frame_size_y + 1;
-        link_length = calculate_link_length(gData['nodes'][source_idx], gData['nodes'][target_idx]);
+        link_length = calculate_link_length(gData['nodes'][source_idx], gData['nodes'][target_idx]) * links_length_reduction[5];
         link_visibility = link_length > cutoff_cdef_links ? false : frame_links_visibility[5];
         gData['links'].push({'source': source_idx, 'target': target_idx, 'value': link_length, 'thickness': frame_links_thickness[5], 'state': 0, 'visible': link_visibility});
+        //detail part - at cross-link d in the middle
+        var tightener_length = link_length * tightener_length_reduction;
+        gData['links'].push({'source': source_idx, 'target': target_idx, 'value': tightener_length, 'thickness': frame_links_thickness[5] * tightener_thickness_f, 'state': 0, 'visible': link_visibility});
       }
 
       // cross-link e
       if ((j != 0) && (i != frame_size_x - 1) && !((j % 2 == 0) && alternating_cd_ef)) {
         target_idx = node_counter + frame_size_upper_grid - 1;
-        link_length = calculate_link_length(gData['nodes'][source_idx], gData['nodes'][target_idx]);
+        link_length = calculate_link_length(gData['nodes'][source_idx], gData['nodes'][target_idx]) * links_length_reduction[6];
         link_visibility = link_length > cutoff_cdef_links ? false : frame_links_visibility[6];
         gData['links'].push({'source': source_idx, 'target': target_idx, 'value': link_length, 'thickness': frame_links_thickness[6], 'state': 0, 'visible': link_visibility});
+        //detail part - at cross-link e in the middle
+        var tightener_length = link_length * tightener_length_reduction;
+        gData['links'].push({'source': source_idx, 'target': target_idx, 'value': tightener_length, 'thickness': frame_links_thickness[6] * tightener_thickness_f, 'state': 0, 'visible': link_visibility});
       }
 
       // cross-link f
       if ((j != 0) && (i != 0) && !((j % 2 == 0) && alternating_cd_ef)) {
         target_idx = node_counter + frame_size_upper_grid - frame_size_y - 1;
-        link_length = calculate_link_length(gData['nodes'][source_idx], gData['nodes'][target_idx]);
+        link_length = calculate_link_length(gData['nodes'][source_idx], gData['nodes'][target_idx]) * links_length_reduction[7];
         link_visibility = link_length > cutoff_cdef_links ? false : frame_links_visibility[7];
         gData['links'].push({'source': source_idx, 'target': target_idx, 'value': link_length, 'thickness': frame_links_thickness[7], 'state': 0, 'visible': link_visibility});
+        //detail part - at cross-link f in the middle
+        var tightener_length = link_length * tightener_length_reduction;
+        gData['links'].push({'source': source_idx, 'target': target_idx, 'value': tightener_length, 'thickness': frame_links_thickness[7] * tightener_thickness_f, 'state': 0, 'visible': link_visibility});
       }
-
 
 
       var pattern_condition;
@@ -1054,6 +1083,9 @@ function space_frame_triprism_gData(origin = new THREE.Vector3(0, 0, 0)) {
         link_length = calculate_link_length(gData['nodes'][source_idx], gData['nodes'][target_idx]);
         link_visibility = link_length > cutoff_gh_links ? false : frame_links_visibility[8];
         gData['links'].push({'source': source_idx, 'target': target_idx, 'value': link_length, 'thickness': frame_links_thickness[8], 'state': 0, 'visible': link_visibility});
+        //detail part - at cross-link g_u (upper grid) in the middle
+        var tightener_length = link_length * tightener_length_reduction;
+        gData['links'].push({'source': source_idx, 'target': target_idx, 'value': tightener_length, 'thickness': frame_links_thickness[8] * tightener_thickness_f, 'state': 0, 'visible': link_visibility});
       }
 
       // cross-link h_u (upper grid)
@@ -1068,6 +1100,9 @@ function space_frame_triprism_gData(origin = new THREE.Vector3(0, 0, 0)) {
         link_length = calculate_link_length(gData['nodes'][source_idx], gData['nodes'][target_idx]);
         link_visibility = link_length > cutoff_gh_links ? false : frame_links_visibility[9];
         gData['links'].push({'source': source_idx, 'target': target_idx, 'value': link_length, 'thickness': frame_links_thickness[9], 'state': 0, 'visible': link_visibility});
+        //detail part - at cross-link h_u (upper grid) in the middle
+        var tightener_length = link_length * tightener_length_reduction;
+        gData['links'].push({'source': source_idx, 'target': target_idx, 'value': tightener_length, 'thickness': frame_links_thickness[9] * tightener_thickness_f, 'state': 0, 'visible': link_visibility});
       }
 
 
@@ -1085,6 +1120,9 @@ function space_frame_triprism_gData(origin = new THREE.Vector3(0, 0, 0)) {
         link_length = calculate_link_length(gData['nodes'][source_idx], gData['nodes'][target_idx]);
         link_visibility = link_length > cutoff_gh_links ? false : frame_links_visibility[10];
         gData['links'].push({'source': source_idx, 'target': target_idx, 'value': link_length, 'thickness': frame_links_thickness[10], 'state': 0, 'visible': link_visibility});
+        //detail part - at cross-link g_l (lower grid) in the middle
+        var tightener_length = link_length * tightener_length_reduction;
+        gData['links'].push({'source': source_idx, 'target': target_idx, 'value': tightener_length, 'thickness': frame_links_thickness[10] * tightener_thickness_f, 'state': 0, 'visible': link_visibility});
       }
 
       // cross-link h_l (lower grid)
@@ -1100,6 +1138,9 @@ function space_frame_triprism_gData(origin = new THREE.Vector3(0, 0, 0)) {
         link_length = calculate_link_length(gData['nodes'][source_idx], gData['nodes'][target_idx]);
         link_visibility = link_length > cutoff_gh_links ? false : frame_links_visibility[11];
         gData['links'].push({'source': source_idx, 'target': target_idx, 'value': link_length, 'thickness': frame_links_thickness[11], 'state': 0, 'visible': link_visibility});
+        //detail part - at cross-link h_l (lower grid) in the middle
+        var tightener_length = link_length * tightener_length_reduction;
+        gData['links'].push({'source': source_idx, 'target': target_idx, 'value': tightener_length, 'thickness': frame_links_thickness[11] * tightener_thickness_f, 'state': 0, 'visible': link_visibility});
       }
 
 
