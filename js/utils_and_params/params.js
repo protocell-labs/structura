@@ -30,3 +30,24 @@ function get_steps(stage) {
 const cylinder_params = {
   'standard' : [0.5, 0.5, 1, 6, 1] 
 };
+
+
+
+
+
+//////ANIMATION SETTINGS CHOOSING//////
+const light_frame_speed_param = {
+  Fast: 25, // light increment per 1/100 of a second
+  Normal: 50, // light increment per 1/30 of a second
+  Slow: 500, // light increment per half-second
+  SuperSlow: 1000, // light increment per second
+}
+
+const light_step_size_param = {
+  Paused: 0,
+  DaySync: 0.000072,//2*Math.PI/86400,
+  SuperSmall: 0.00025,
+  Small: 0.0005,
+  Medium: 0.0010,
+  Large: 0.0015
+}

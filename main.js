@@ -29,34 +29,32 @@ var aspect_ratio = 0.5625; //// 0.5625 - 16:9 aspect ratio, 0.75 - portrait (use
 var explosion_type = 0; // no explosion
 var light_source_type = "south";
 
-var position = new THREE.Vector3(0, 0, 0);
-
 var global_rot_x = -Math.PI/16; // global rotation of the model around the X axis, -Math.PI/16
 var global_rot_y = 0; // global rotation of the model around the Y axis, Math.PI/16
 
-var frame_size_x = 15; // 6, 12
-var frame_size_y = 25; // 9, 18
-var frame_cell_w = 25; // 50, 25
-var frame_cell_h = 35; // 100, 50
-var frame_cell_d = 25; // 50, 25
+var total_frame_size_x = 8; // 6, 12, 10
+var total_frame_size_y = 12; // 9, 18, 23
+var frame_cell_w = 50; // 50, 25, 25
+var frame_cell_h = 70; // 100, 50, 35
+var frame_cell_d = 25; // 50, 25, 25
 
 //                           [vert, hor,  a,    b,    c,    d,    e,    f,    g_u,  h_u,  g_l,  h_l]
 var frame_links_visibility = [true, true, true, true, true, true, true, true, false, false, false, false];
-var frame_links_thickness  = [1.5,  1.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  1.0,  1.0,  1.0,  1.0];
+var frame_links_thickness  = [3.5,  3.5,  2.5,  2.5,  2.5,  2.5,  2.5,  2.5,  1.0,  1.0,  1.0,  1.0];
 var alternating_cd_ef = true;
 var alternating_gu_hu = true;
 var alternating_gu_hu_pattern = 1; // options: 1, 2, 3, 4, 5 - visible only if alternating_gu_hu_pattern = true
 var alternating_gl_hl = true;
 var alternating_gl_hl_pattern = 1; // options: 1, 2, 3, 4, 5 - visible only if alternating_gl_hl_pattern = true
 
-var noise_shift_x = gene() * 100;
-var noise_shift_y = gene() * 100;
-var noise_shift_z = gene() * 100;
-var noise_scale_x = 0.005; // 0.005
-var noise_scale_y = 0.005; // 0.005
-var noise_scale_z = 0.005; // 0.005
+var noise_shift_x = gene_range(-100, 100);
+var noise_shift_y = gene_range(-100, 100);
+var noise_shift_z = gene_range(-100, 100);
+var noise_scale_x = 0.15; // 0.005
+var noise_scale_y = 0.15; // 0.005
+var noise_scale_z = 0.15; // 0.005
 var noise_factor = 10.0; // 10.0
-var noise_component_offset = 1.0;
+var noise_component_offset = 1.0; // 1.0, 1.21
 
 var modulate_x = true;
 var modulate_y = true;
@@ -67,11 +65,31 @@ var cutoff_hor_links = frame_cell_w * 2.0;
 var cutoff_cdef_links = frame_cell_h * 2.0;
 var cutoff_gh_links = frame_cell_h * 2.0;
 
+var nr_of_stripes = 3;
+var gap_w = 25; // this value is not always working correctly with stripes
+var frame_size_x = Math.floor(total_frame_size_x / nr_of_stripes) + 1;
+var frame_size_y = total_frame_size_y;
 
-gData = space_frame_triprism_gData(position);
-gDatas.push(gData);
+var total_width = (frame_size_x - 1) * frame_cell_w + (nr_of_stripes - 1) * gap_w;
+var x_placement;
 
+console.log("total width ->", total_width);
 
+// placement of stripes
+for (var i = 0; i < nr_of_stripes; i++) {
+
+  if (nr_of_stripes == 1) {x_placement = 0;}
+  else if (nr_of_stripes == 2) {x_placement = total_width / 2.0 - i * (total_width * 2) / nr_of_stripes;}
+  else {x_placement = total_width - i * (total_width * 2) / (nr_of_stripes - 1);} //total_width - i * (total_width * 2) / (nr_of_stripes - 1);
+  
+  var frame_position = new THREE.Vector3(x_placement, 0, 0);
+
+  gData = space_frame_triprism_gData(frame_position);
+  gDatas.push(gData);
+  console.log("#", i, "stripe ->", x_placement);
+}
+
+console.log(Math.random());
 
 
 //////CONSOLE LOG//////
@@ -272,6 +290,8 @@ View.prototype.addSpaceFrame = function () {
       imesh.setMatrixAt(i, dummy.matrix);
     }
 
+
+
     // global rotation of the instanced mesh
     imesh.rotateX(global_rot_x);
     imesh.rotateY(global_rot_y);
@@ -343,10 +363,10 @@ function Controller(viewArea) {
   const up = new THREE.Vector3(0,1,0)
 
   // LIGHT TRAVEL PARAMETERS
-  var light_framerate = 50; 
-  light_framerate_change = 50; //Needs to be the same
+  var light_framerate = 50; // 50 - obscvrvm
+  light_framerate_change = 50; // 50 - needs to be the same
   var base_light_angle = Math.PI/3; // starting angle, angle 0 is straight behind the camera
-  base_light_angle_step = 0.0005; //0.05
+  base_light_angle_step = 0.0000; // zero makes the light not travel, before 0.0005 - obscvrvm
   //var light_angle;
   var light_angle_step;
 

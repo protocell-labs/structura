@@ -889,9 +889,9 @@ function space_frame_triprism_gData(origin = new THREE.Vector3(0, 0, 0)) {
       node_position_y = j * frame_cell_h - ((frame_size_y - 1) * frame_cell_h) / 2.0 + origin.y;
       node_position_z = 0 + origin.z;
 
-      noise_value_x = perlin3D(i * noise_scale_x * frame_cell_w + noise_shift_x, j * noise_scale_y * frame_cell_h + noise_shift_y, noise_scale_z + noise_shift_z);
-      noise_value_y = perlin3D(i * noise_scale_x * frame_cell_w + noise_shift_x, j * noise_scale_y * frame_cell_h + noise_shift_y, noise_scale_z + noise_shift_z + noise_component_offset);
-      noise_value_z = perlin3D(i * noise_scale_x * frame_cell_w + noise_shift_x, j * noise_scale_y * frame_cell_h + noise_shift_y, noise_scale_z + noise_shift_z + noise_component_offset * 2);
+      noise_value_x = perlin3D(i * noise_scale_x + noise_shift_x + origin.x, j * noise_scale_y + noise_shift_y + origin.y, noise_scale_z + noise_shift_z + origin.z);
+      noise_value_y = perlin3D(i * noise_scale_x + noise_shift_x + origin.x, j * noise_scale_y + noise_shift_y + origin.y, noise_scale_z + noise_shift_z + origin.z + noise_component_offset);
+      noise_value_z = perlin3D(i * noise_scale_x + noise_shift_x + origin.x, j * noise_scale_y + noise_shift_y + origin.y, noise_scale_z + noise_shift_z + origin.z + noise_component_offset * 2);
       
       if (modulate_x) {node_position_x += noise_factor * noise_value_x;}
       if (modulate_y) {node_position_y += noise_factor * noise_value_y;}
@@ -940,9 +940,9 @@ function space_frame_triprism_gData(origin = new THREE.Vector3(0, 0, 0)) {
       node_position_y = j * frame_cell_h - ((frame_size_y - 1) * frame_cell_h) / 2.0 + origin.y;
       node_position_z = origin.z - frame_cell_d;
 
-      noise_value_x = perlin3D(i * noise_scale_x * frame_cell_w + noise_shift_x, j * noise_scale_y * frame_cell_h + noise_shift_y, noise_scale_z + noise_shift_z);
-      noise_value_y = perlin3D(i * noise_scale_x * frame_cell_w + noise_shift_x, j * noise_scale_y * frame_cell_h + noise_shift_y, noise_scale_z + noise_shift_z + noise_component_offset);
-      noise_value_z = perlin3D(i * noise_scale_x * frame_cell_w + noise_shift_x, j * noise_scale_y * frame_cell_h + noise_shift_y, noise_scale_z + noise_shift_z + noise_component_offset * 2);
+      noise_value_x = perlin3D(i * noise_scale_x + noise_shift_x + origin.x, j * noise_scale_y + noise_shift_y + origin.y, noise_scale_z + noise_shift_z + origin.z);
+      noise_value_y = perlin3D(i * noise_scale_x + noise_shift_x + origin.x, j * noise_scale_y + noise_shift_y + origin.y, noise_scale_z + noise_shift_z + origin.z + noise_component_offset);
+      noise_value_z = perlin3D(i * noise_scale_x + noise_shift_x + origin.x, j * noise_scale_y + noise_shift_y + origin.y, noise_scale_z + noise_shift_z + origin.z + noise_component_offset * 2);
       
       if (modulate_x) {node_position_x += noise_factor * noise_value_x;}
       if (modulate_y) {node_position_y += noise_factor * noise_value_y;}
