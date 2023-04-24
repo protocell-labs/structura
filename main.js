@@ -267,6 +267,18 @@ function View(viewArea) {
   bloomPass.radius = 0.0;
   bloomPass.threshold = 0.0;
   this.composer.addPass(bloomPass)
+
+  //Colour to Greyscale 
+  //const effectGrayScale = new THREE.ShaderPass( THREE.LuminosityHighPassShader);
+  //this.composer.addPass(effectGrayScale)
+
+  //Gaussian Blur Filter to impruve sobel operator?
+
+  //Sobel operator
+  const effectSobel = new THREE.ShaderPass( THREE.SobelOperatorShader);
+  effectSobel.uniforms['resolution'].value.x = window.innerWidth * window.devicePixelRatio;
+  effectSobel.uniforms['resolution'].value.y = window.innerHeight * window.devicePixelRatio
+  this.composer.addPass(effectSobel)
 }
 
 
