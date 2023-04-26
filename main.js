@@ -32,15 +32,15 @@ var light_source_type = "south";
 var global_rot_x = -Math.PI/16; // global rotation of the model around the X axis, -Math.PI/16
 var global_rot_y = 0; // global rotation of the model around the Y axis, Math.PI/16
 
-var total_frame_size_x = 13; // 6, 12, 10
-var total_frame_size_y = 20; // 9, 18, 23
-var frame_cell_w = 25; // 50, 25, 25
-var frame_cell_h = 40; // 100, 50, 35
+var total_frame_size_x = 10; // 6, 12, 10
+var total_frame_size_y = 15; // 9, 18, 23
+var frame_cell_w = 35; // 50, 25, 25
+var frame_cell_h = 50; // 100, 50, 35
 var frame_cell_d = 25; // 50, 25, 25
 
 //                           [vert, hor,  a,    b,    c,    d,    e,    f,    g_u,  h_u,  g_l,  h_l]
 var frame_links_visibility = [true, true, true, true, true, true, true, true, true, true, true, true];
-var frame_links_thickness  = [1.5,  1.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  1.0,  1.0,  1.0,  1.0];
+var frame_links_thickness  = [2.5,  2.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  1.0,  1.0,  1.0,  1.0];
 var links_length_reduction = [1.00, 0.85, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90];
 var alternating_cd_ef = true;
 var alternating_gu_hu = true;
@@ -259,7 +259,7 @@ function View(viewArea) {
   const effectFXAA = new THREE.ShaderPass( THREE.FXAAShader );
   effectFXAA.uniforms[ 'resolution' ].value.x = 1 / ( window.innerWidth * window.devicePixelRatio );
   effectFXAA.uniforms[ 'resolution' ].value.y = 1 / ( window.innerHeight * window.devicePixelRatio );
-  //this.composer.addPass( effectFXAA );   
+  //this.composer.addPass( effectFXAA );
 
   //Bloom
   const bloomPass = new THREE.UnrealBloomPass();
@@ -268,17 +268,24 @@ function View(viewArea) {
   bloomPass.threshold = 0.0;
   this.composer.addPass(bloomPass)
 
-  //Colour to Greyscale 
+  //Colour to Grayscale 
   //const effectGrayScale = new THREE.ShaderPass( THREE.LuminosityHighPassShader);
   //this.composer.addPass(effectGrayScale)
 
-  //Gaussian Blur Filter to impruve sobel operator?
+  //Gaussian Blur Filter to improve sobel operator?
 
   //Sobel operator
   const effectSobel = new THREE.ShaderPass( THREE.SobelOperatorShader);
-  effectSobel.uniforms['resolution'].value.x = window.innerWidth * window.devicePixelRatio;
-  effectSobel.uniforms['resolution'].value.y = window.innerHeight * window.devicePixelRatio
-  this.composer.addPass(effectSobel)
+  effectSobel.uniforms['resolution'].value.x = window.innerWidth * window.devicePixelRatio * 4.0; // increased the resolution of the texture to get finer edge detection
+  effectSobel.uniforms['resolution'].value.y = window.innerHeight * window.devicePixelRatio * 4.0; // same as above
+  //this.composer.addPass(effectSobel);
+
+  //Sobel operator
+  const effectPixelEdge = new THREE.ShaderPass( THREE.PixelEdgeShader);
+  effectPixelEdge.uniforms['resolution'].value.x = window.innerWidth * window.devicePixelRatio * 4.0; // increased the resolution of the texture to get finer edge detection
+  effectPixelEdge.uniforms['resolution'].value.y = window.innerHeight * window.devicePixelRatio * 4.0; // same as above
+  this.composer.addPass(effectPixelEdge);
+
 }
 
 
