@@ -179,6 +179,11 @@ function View(viewArea) {
   camera.position.set(0, 0, 2000);
   camera.lookAt(new THREE.Vector3(0, 0, 0));
 
+
+  
+  const normalRenderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
+  const shadowRenderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
+
   //composer = new THREE.EffectComposer( renderer );
   composer.setSize(window.innerWidth, window.innerHeight)
 
@@ -192,7 +197,7 @@ function View(viewArea) {
   var light = new THREE.PointLight(0xffffff);
   light.position.set(0, 0, 2000); //1000,1000,1000
  
-  light.castShadow = true;
+  light.castShadow = false;
   light.shadow.camera.near = 200;
   light.shadow.camera.far = 2000;
   light.shadow.bias = - 0.000222;
@@ -233,6 +238,8 @@ function View(viewArea) {
 
   scene.add(light);
 
+
+
   const amblight = new THREE.AmbientLight(color, amb_intensity);
   scene.add(amblight);
 
@@ -255,11 +262,7 @@ function View(viewArea) {
   const renderPass = new THREE.RenderPass(this.scene, this.camera);
   this.composer.addPass( renderPass );
 
-  // FXAA antialiasing
-  const effectFXAA = new THREE.ShaderPass( THREE.FXAAShader );
-  effectFXAA.uniforms[ 'resolution' ].value.x = 1 / ( window.innerWidth * window.devicePixelRatio );
-  effectFXAA.uniforms[ 'resolution' ].value.y = 1 / ( window.innerHeight * window.devicePixelRatio );
-  //this.composer.addPass( effectFXAA );   
+
 
   //Bloom
   const bloomPass = new THREE.UnrealBloomPass();
@@ -279,6 +282,25 @@ function View(viewArea) {
   effectSobel.uniforms['resolution'].value.x = window.innerWidth * window.devicePixelRatio;
   effectSobel.uniforms['resolution'].value.y = window.innerHeight * window.devicePixelRatio
   this.composer.addPass(effectSobel)
+
+  // FXAA antialiasing
+  const effectFXAA = new THREE.ShaderPass( THREE.FXAAShader );
+  effectFXAA.uniforms[ 'resolution' ].value.x = 1 / ( window.innerWidth * window.devicePixelRatio );
+  effectFXAA.uniforms[ 'resolution' ].value.y = 1 / ( window.innerHeight * window.devicePixelRatio );
+  this.composer.addPass( effectFXAA );   
+
+  // Add your shader pass here
+  //const shaderPass = new THREE.ShaderPass(shaderMaterial);
+  //composer.addPass(shaderPass);
+
+  //In constructor ShaderPass creates internal ShaderMaterial and we should set this material's transparency to true:
+  //shaderPass.material.transparent = true
+
+  // Add your shadow pass here
+  //const shadowPass = new THREE.ShadowMapPass(this.light);
+  //composer.addPass(shadowPass);
+
+
 }
 
 
