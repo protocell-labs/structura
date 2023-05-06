@@ -1,15 +1,15 @@
 /*
 
-__/\\\________/\\\____________/\\\\\\\\\\\\\\\______________/\\\\\\\\\___________________/\\\\\\\\\\\______________/\\\\\\\\\\\\\\\_        
- _\/\\\_______\/\\\___________\/\\\///////////_____________/\\\///////\\\_______________/\\\/////////\\\___________\/\\\///////////__       
-  _\//\\\______/\\\____________\/\\\_______________________\/\\\_____\/\\\______________\//\\\______\///____________\/\\\_____________      
-   __\//\\\____/\\\_____________\/\\\\\\\\\\\_______________\/\\\\\\\\\\\/________________\////\\\___________________\/\\\\\\\\\\\_____     
-    ___\//\\\__/\\\______________\/\\\///////________________\/\\\//////\\\___________________\////\\\________________\/\\\///////______    
-     ____\//\\\/\\\_______________\/\\\_______________________\/\\\____\//\\\_____________________\////\\\_____________\/\\\_____________   
-      _____\//\\\\\________________\/\\\_______________________\/\\\_____\//\\\_____________/\\\______\//\\\____________\/\\\_____________  
-       ______\//\\\_________________\/\\\\\\\\\\\\\\\___________\/\\\______\//\\\___________\///\\\\\\\\\\\/_____________\/\\\\\\\\\\\\\\\_ 
+__/\\\________/\\\____________/\\\\\\\\\\\\\\\______________/\\\\\\\\\___________________/\\\\\\\\\\\______________/\\\\\\\\\\\\\\\_
+ _\/\\\_______\/\\\___________\/\\\///////////_____________/\\\///////\\\_______________/\\\/////////\\\___________\/\\\///////////__
+  _\//\\\______/\\\____________\/\\\_______________________\/\\\_____\/\\\______________\//\\\______\///____________\/\\\_____________
+   __\//\\\____/\\\_____________\/\\\\\\\\\\\_______________\/\\\\\\\\\\\/________________\////\\\___________________\/\\\\\\\\\\\_____
+    ___\//\\\__/\\\______________\/\\\///////________________\/\\\//////\\\___________________\////\\\________________\/\\\///////______
+     ____\//\\\/\\\_______________\/\\\_______________________\/\\\____\//\\\_____________________\////\\\_____________\/\\\_____________
+      _____\//\\\\\________________\/\\\_______________________\/\\\_____\//\\\_____________/\\\______\//\\\____________\/\\\_____________
+       ______\//\\\_________________\/\\\\\\\\\\\\\\\___________\/\\\______\//\\\___________\///\\\\\\\\\\\/_____________\/\\\\\\\\\\\\\\\_
         _______\///__________________\///////////////____________\///________\///______________\///////////_______________\///////////////__
-                                   
+
 
                                     V E R S E  |  { p r o t o c e l l : l a b s }  +  o f f i c e c a  |  2 0 2 3
 */
@@ -32,15 +32,15 @@ var light_source_type = "south";
 var global_rot_x = -Math.PI/16; // global rotation of the model around the X axis, -Math.PI/16
 var global_rot_y = 0; // global rotation of the model around the Y axis, Math.PI/16
 
-var total_frame_size_x = 13; // 6, 12, 10
-var total_frame_size_y = 20; // 9, 18, 23
-var frame_cell_w = 25; // 50, 25, 25
-var frame_cell_h = 40; // 100, 50, 35
+var total_frame_size_x = 10; // 6, 12, 10
+var total_frame_size_y = 15; // 9, 18, 23
+var frame_cell_w = 35; // 50, 25, 25
+var frame_cell_h = 50; // 100, 50, 35
 var frame_cell_d = 25; // 50, 25, 25
 
 //                           [vert, hor,  a,    b,    c,    d,    e,    f,    g_u,  h_u,  g_l,  h_l]
 var frame_links_visibility = [true, true, true, true, true, true, true, true, true, true, true, true];
-var frame_links_thickness  = [1.5,  1.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  1.0,  1.0,  1.0,  1.0];
+var frame_links_thickness  = [2.5,  2.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  1.0,  1.0,  1.0,  1.0];
 var links_length_reduction = [1.00, 0.85, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90];
 var alternating_cd_ef = true;
 var alternating_gu_hu = true;
@@ -88,7 +88,7 @@ for (var i = 0; i < nr_of_stripes; i++) {
   if (nr_of_stripes == 1) {x_placement = 0;}
   else if (nr_of_stripes == 2) {x_placement = total_width / 2.0 - i * (total_width * 2) / nr_of_stripes;}
   else {x_placement = total_width - i * (total_width * 2) / (nr_of_stripes - 1);} //total_width - i * (total_width * 2) / (nr_of_stripes - 1);
-  
+
   var frame_position = new THREE.Vector3(x_placement, 0, 0);
 
   gData = space_frame_triprism_gData(frame_position);
@@ -157,8 +157,8 @@ function View(viewArea) {
 
   viewport.style.marginTop=margin_top+'px';
   viewport.style.marginLeft=margin_left+'px';
-    
-  
+
+
   ///SCALING
   cam_factor_mod = cam_factor * Math.min(viewportWidth/1000, viewportHeight/1000);
 
@@ -180,7 +180,7 @@ function View(viewArea) {
   camera.lookAt(new THREE.Vector3(0, 0, 0));
 
 
-  
+
   const normalRenderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
   const shadowRenderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
 
@@ -196,7 +196,7 @@ function View(viewArea) {
   // ADD LIGHTING
   var light = new THREE.PointLight(0xffffff);
   light.position.set(0, 0, 2000); //1000,1000,1000
- 
+
   light.castShadow = false;
   light.shadow.camera.near = 200;
   light.shadow.camera.far = 2000;
@@ -210,7 +210,7 @@ function View(viewArea) {
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
     const shadowString = urlParams.get('shadow');
-    
+
   if (shadowString!=null) {
       shadow = Math.abs(parseInt(shadowString));
       paramsAssigned = true;
@@ -221,19 +221,19 @@ function View(viewArea) {
   if (Number.isInteger(shadow) & paramsAssigned) { //If values are overiden by urlParams  for a minimum overide add: & shadow > 2048
     console.log("Using custom url parmater for shadow map size: " + shadow.toString())
     light.shadow.mapSize.width = shadow;
-    light.shadow.mapSize.height = shadow;   
+    light.shadow.mapSize.height = shadow;
   } else if (Number.isInteger(shadow) & iOS()) {
     //console.log("iOS")
     light.shadow.mapSize.width = Math.min(shadow, 2048); //increase for better quality of shadow, standard is 2048
-    light.shadow.mapSize.height = Math.min(shadow, 2048); 
+    light.shadow.mapSize.height = Math.min(shadow, 2048);
   } else if ((Number.isInteger(shadow) & !iOS())){
     //console.log("!iOS")
     light.shadow.mapSize.width = Math.max(shadow, 4096);
     light.shadow.mapSize.height = Math.max(shadow, 4096);
   } else {
     //console.log("Using default shadow map.")
-    light.shadow.mapSize.width = 4096; 
-    light.shadow.mapSize.height = 4096; 
+    light.shadow.mapSize.width = 4096;
+    light.shadow.mapSize.height = 4096;
   }
 
   scene.add(light);
@@ -262,7 +262,11 @@ function View(viewArea) {
   const renderPass = new THREE.RenderPass(this.scene, this.camera);
   this.composer.addPass( renderPass );
 
-
+  // FXAA antialiasing
+  const effectFXAA = new THREE.ShaderPass( THREE.FXAAShader );
+  effectFXAA.uniforms[ 'resolution' ].value.x = 1 / ( window.innerWidth * window.devicePixelRatio );
+  effectFXAA.uniforms[ 'resolution' ].value.y = 1 / ( window.innerHeight * window.devicePixelRatio );
+  //this.composer.addPass( effectFXAA );
 
   //Bloom
   const bloomPass = new THREE.UnrealBloomPass();
@@ -271,35 +275,23 @@ function View(viewArea) {
   bloomPass.threshold = 0.0;
   this.composer.addPass(bloomPass)
 
-  //Colour to Greyscale 
+  //Colour to Grayscale
   //const effectGrayScale = new THREE.ShaderPass( THREE.LuminosityHighPassShader);
   //this.composer.addPass(effectGrayScale)
 
-  //Gaussian Blur Filter to impruve sobel operator?
+  //Gaussian Blur Filter to improve sobel operator?
 
   //Sobel operator
   const effectSobel = new THREE.ShaderPass( THREE.SobelOperatorShader);
-  effectSobel.uniforms['resolution'].value.x = window.innerWidth * window.devicePixelRatio;
-  effectSobel.uniforms['resolution'].value.y = window.innerHeight * window.devicePixelRatio
-  this.composer.addPass(effectSobel)
+  effectSobel.uniforms['resolution'].value.x = window.innerWidth * window.devicePixelRatio * 4.0; // increased the resolution of the texture to get finer edge detection
+  effectSobel.uniforms['resolution'].value.y = window.innerHeight * window.devicePixelRatio * 4.0; // same as above
+  //this.composer.addPass(effectSobel);
 
-  // FXAA antialiasing
-  const effectFXAA = new THREE.ShaderPass( THREE.FXAAShader );
-  effectFXAA.uniforms[ 'resolution' ].value.x = 1 / ( window.innerWidth * window.devicePixelRatio );
-  effectFXAA.uniforms[ 'resolution' ].value.y = 1 / ( window.innerHeight * window.devicePixelRatio );
-  this.composer.addPass( effectFXAA );   
-
-  // Add your shader pass here
-  //const shaderPass = new THREE.ShaderPass(shaderMaterial);
-  //composer.addPass(shaderPass);
-
-  //In constructor ShaderPass creates internal ShaderMaterial and we should set this material's transparency to true:
-  //shaderPass.material.transparent = true
-
-  // Add your shadow pass here
-  //const shadowPass = new THREE.ShadowMapPass(this.light);
-  //composer.addPass(shadowPass);
-
+  //Sobel operator
+  const effectPixelEdge = new THREE.ShaderPass( THREE.PixelEdgeShader);
+  effectPixelEdge.uniforms['resolution'].value.x = window.innerWidth * window.devicePixelRatio * 4.0; // increased the resolution of the texture to get finer edge detection
+  effectPixelEdge.uniforms['resolution'].value.y = window.innerHeight * window.devicePixelRatio * 4.0; // same as above
+  this.composer.addPass(effectPixelEdge);
 
 }
 
@@ -314,7 +306,7 @@ View.prototype.addSpaceFrame = function () {
     var dummy = new THREE.Object3D()
     var geometry = new THREE.CylinderGeometry( cylinder_params[c_type][0], cylinder_params[c_type][1], cylinder_params[c_type][2], cylinder_params[c_type][3], cylinder_params[c_type][4], false ); // capped cylinder
     var material = new THREE.MeshPhongMaterial( {color: 0xffffff} ); //THREE.MeshBasicMaterial( {color: 0xff0000} ); THREE.MeshNormalMaterial();
-    
+
     // LINKS
     var imesh = new THREE.InstancedMesh( geometry, material, gData.links.length )
     var axis = new THREE.Vector3(0, 1, 0);
@@ -469,7 +461,7 @@ function Controller(viewArea) {
     // rotation in XZ plane
     //view.light.position.set(Math.sin(light_angle)*parallex_amplitude, Math.cos(light_angle)*parallex_amplitude, lp.z);
   }
- 
+
   var lightIntervalInstance = setInterval(function () {update_light_position()}, light_framerate);
 
 
@@ -487,7 +479,7 @@ function Controller(viewArea) {
           } else {
             light_angle_step = Math.sign(light_angle_step)*base_light_angle_step;
           }
-          
+
           //console.log("After", Math.sign(light_angle_step) ,base_light_angle_step)
         } else {
           arc_division = 1.0;
@@ -504,13 +496,13 @@ function Controller(viewArea) {
         if (getKeyByValue(light_step_size_param, Math.abs(light_angle_step)) == "DaySync") { //light_step_size_param.DaySync
           arc_division = Math.abs(light_angle_step)*1000/light_framerate;
           console.log("Arc Division Factor: " + arc_division.toString())
-        
+
         } else { arc_division = 1.0; }//Update light step as well if framerate is changed and
         light_framerate = light_framerate_change;
         lightIntervalInstance = setInterval(function () {update_light_position()}, light_framerate); //create new interval with updated framerate
       }
 
-    
+
       if (debug) {
         var end_timer = new Date().getTime();
         pre_calc = (end_timer - start_timer);
@@ -562,7 +554,7 @@ function Controller(viewArea) {
     viewportAdjust(document.getElementById('viewport'), false);
     fitCameraToViewport(view, viewportWidth, viewportHeight);
     }
-  
+
     window.addEventListener( 'resize', onWindowResize );
 }
 
@@ -578,14 +570,14 @@ function viewportAdjust(vp, inner=true) {
 
       viewportHeight = window.innerHeight; //Force Height to be inner Height
       viewportWidth = aspect_ratio*window.innerHeight;  //Scale width proportionally
-  
+
       margin_top = 0;
       margin_left = (window.innerWidth - viewportWidth)/2;
     } else {  //If target viewport width is larger then inner width
-  
+
       viewportHeight = window.innerWidth/aspect_ratio; //Scale viewport height proportionally
       viewportWidth = window.innerWidth; //Force Width  to be inner Height
-  
+
       margin_top = (window.innerHeight - viewportHeight)/2;
       margin_left = 0;
 
@@ -594,21 +586,21 @@ function viewportAdjust(vp, inner=true) {
 
     ///SCALING
     cam_factor_mod = cam_factor * Math.min((viewportWidth/1000)*quality, (viewportHeight/1000)*quality);
-    
+
   } else {
     if (window.innerWidth/aspect_ratio>window.innerHeight) { //If target viewport height is larger then inner height
-      
+
       //document.documentElement.scrollWidth/scrollHeight
       viewportHeight = window.innerHeight; //Force Height to be inner Height
       viewportWidth = aspect_ratio*window.innerHeight;  //Scale width proportionally
-  
+
       margin_top = 0;
       margin_left = (window.innerWidth - viewportWidth)/2;
     } else {  //If target viewport width is larger then inner width
-  
+
       viewportHeight = window.innerWidth/aspect_ratio; //Scale viewport height proportionally
       viewportWidth = window.innerWidth; //Force Width  to be inner Height
-  
+
       margin_top = (window.innerHeight - viewportHeight)/2;
       margin_left = 0;
 
@@ -670,7 +662,7 @@ function check_drawing_buffer(q) {
 function doc_keyUp(e) {
   // Example double key use: e.ctrlKey && e.key === 'ArrowDown'
   // this would test for whichever key is 40 (down arrow) and the ctrl key at the same time
-  if (e.keyCode === 49 || e.keyCode === 97) { // 1 or NumPad 1   
+  if (e.keyCode === 49 || e.keyCode === 97) { // 1 or NumPad 1
     snap = true;
     quality = 1;
   } else if (e.keyCode === 50 || e.keyCode === 98) {// 2 or NumPad 2
@@ -731,13 +723,13 @@ function doc_keyUp(e) {
       document.body.style.backgroundColor = "white";
       console.log("Background: white")
     }
-    
-  } 
+
+  }
   else if (e.keyCode === 73 && !e.ctrlKey) {  //i and not ctrl
     document.getElementById("keybinding").style.display = "block";
     document.querySelector("#keybinding").style.opacity = 1
-    //Load modal with decription for all the keys for few 
-    //seconds and make it fade to invisible after a few seconds. 
+    //Load modal with decription for all the keys for few
+    //seconds and make it fade to invisible after a few seconds.
     //Each additional non active key press restarts the fade out animation
     if (typeof fade !== 'undefined') {
       clearInterval(fade)
@@ -773,13 +765,13 @@ const capture = (contx) => {
   composer.render();
 
   try {
-    const urlBase64 = renderer.domElement.toDataURL('img/png'); 
+    const urlBase64 = renderer.domElement.toDataURL('img/png');
     const a = document.createElement("a");
     a.href = urlBase64;
     a.download = `VERSE_${parseInt(Math.random()*10000000)}.png`;
     a.click();
     URL.revokeObjectURL(urlBase64);
-  }  
+  }
   catch(e) {
     console.log("Browser does not support taking screenshot of 3d context");
     return;
@@ -789,18 +781,15 @@ const capture = (contx) => {
 
   viewportAdjust(document.getElementById('viewport'))
   cam_factor_mod = cam_factor * Math.min(viewportWidth*quality/1000, viewportHeight*quality/1000);
-  
+
   fitCameraToViewport(contx.view, viewportWidth, viewportHeight); //Projection Matrix Updated
-  
+
   composer.render();
 };
 
-// register the capture key handler 
+// register the capture key handler
 document.addEventListener('keyup', doc_keyUp, false);
 
 document.addEventListener('DOMContentLoaded', () => {
   handler();
 });
-
-
-
