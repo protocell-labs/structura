@@ -132,7 +132,9 @@ var background_toggle = false;
 var controller;
 
 var renderer = new THREE.WebGLRenderer({antialias: false, alpha: true, preserveDrawingBuffer: true}); //antialias: true
-const composer = new THREE.EffectComposer( renderer );
+const normalRenderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
+const shadowRenderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
+const composer = new THREE.EffectComposer( renderer, normalRenderTarget);
 let snap = false;
 let quality = 0;
 var capturer = null;
@@ -181,8 +183,7 @@ function View(viewArea) {
 
 
 
-  const normalRenderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
-  const shadowRenderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
+
 
   //composer = new THREE.EffectComposer( renderer );
   composer.setSize(window.innerWidth, window.innerHeight)
@@ -258,22 +259,30 @@ function View(viewArea) {
 
   this.curves = [];
 
+  //renderer.setRenderTarget(normalRenderTarget);
+
   // Renders the Scene
   const renderPass = new THREE.RenderPass(this.scene, this.camera);
   this.composer.addPass( renderPass );
 
+  //light.castShadow = true;
+  //renderer.setRenderTarget(shadowRenderTarget);
+  //renderer.render(this.scene, light.shadow.camera);
+
   // FXAA antialiasing
+  /*
   const effectFXAA = new THREE.ShaderPass( THREE.FXAAShader );
   effectFXAA.uniforms[ 'resolution' ].value.x = 1 / ( window.innerWidth * window.devicePixelRatio );
   effectFXAA.uniforms[ 'resolution' ].value.y = 1 / ( window.innerHeight * window.devicePixelRatio );
-  //this.composer.addPass( effectFXAA );
+  this.composer.addPass( effectFXAA );*/
 
   //Bloom
+  /*
   const bloomPass = new THREE.UnrealBloomPass();
   bloomPass.strength = 0.30;
   bloomPass.radius = 0.0;
   bloomPass.threshold = 0.0;
-  this.composer.addPass(bloomPass)
+  this.composer.addPass(bloomPass)*/
 
   //Colour to Grayscale
   //const effectGrayScale = new THREE.ShaderPass( THREE.LuminosityHighPassShader);
@@ -282,16 +291,27 @@ function View(viewArea) {
   //Gaussian Blur Filter to improve sobel operator?
 
   //Sobel operator
-  const effectSobel = new THREE.ShaderPass( THREE.SobelOperatorShader);
-  effectSobel.uniforms['resolution'].value.x = window.innerWidth * window.devicePixelRatio * 4.0; // increased the resolution of the texture to get finer edge detection
-  effectSobel.uniforms['resolution'].value.y = window.innerHeight * window.devicePixelRatio * 4.0; // same as above
-  //this.composer.addPass(effectSobel);
-
-  //Sobel operator
   const effectPixelEdge = new THREE.ShaderPass( THREE.PixelEdgeShader);
   effectPixelEdge.uniforms['resolution'].value.x = window.innerWidth * window.devicePixelRatio * 4.0; // increased the resolution of the texture to get finer edge detection
   effectPixelEdge.uniforms['resolution'].value.y = window.innerHeight * window.devicePixelRatio * 4.0; // same as above
   this.composer.addPass(effectPixelEdge);
+
+  
+
+  //
+
+  // Combine the two render targets using a shader
+  /*
+  this.composer.addPass(new THREE.ShaderPass(THREE.AdditiveBlendingShader));
+  console.log(this.composer.passes)
+  console.log(THREE.AdditiveBlendingShader)
+  this.composer.passes[this.composer.passes.length - 1].uniforms.tAdd.value = shadowRenderTarget.texture;
+  this.composer.passes[this.composer.passes.length - 1].uniforms.tDiffuse.value = normalRenderTarget.texture;
+ */
+
+  //controls to rotate
+  //const controls = new THREE.OrbitControls( camera, renderer.domElement );
+  //controls.update();
 
 }
 
@@ -368,22 +388,52 @@ View.prototype.addSpaceFrame = function () {
 
 View.prototype.render = function () {
 
-    this.composer.render();
-    //this.renderer.clear();  //
+    this.light.castShadow = false;
+    //this.composer.setRenderTarget(normalRenderTarget)
+    this.composer.render(); //Renders the normal target
 
-    requestAnimationFrame(this.render.bind(this));
+    this.light.castShadow = true;
+    this.renderer.setRenderTarget(shadowRenderTarget)
+    this.renderer.render(this.scene, this.camera);  //Renders the shadow target  //this.light.shadow.camera
 
-    //this.renderer.clear();  //
+    // Create the dummy Scene
+    var screenScene = new THREE.Scene();
+    var screenCamera = new THREE.OrthographicCamera( -viewportWidth/cam_factor_mod, viewportWidth/cam_factor_mod, viewportHeight/cam_factor_mod, -viewportHeight/cam_factor_mod, 0, 5000 );
+    screenCamera.position.set(0, 0, 2000);
+    screenCamera.lookAt(new THREE.Vector3(0, 0, 0));
+    var screenGeometry = new THREE.PlaneBufferGeometry(500, 800);
+
+    // Create a material that use the blended targets and render it to The dummy Scene
+    const screenMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        tDiffuse1: { value: normalRenderTarget.texture },
+        tDiffuse2: { value: shadowRenderTarget.texture }, //Black? Why?
+      },
+      vertexShader: document.getElementById('vertexShader').textContent,
+      fragmentShader: document.getElementById('fragmentShader').textContent,
+      blending: THREE.AdditiveBlending,
+      transparent: true    
+    });
+
+    var screenMesh = new THREE.Mesh(screenGeometry, screenMaterial);
+    screenScene.add(screenMesh);
+
+    this.renderer.setRenderTarget(null); //It will render to screen when set to null
+    this.renderer.render(screenScene, screenCamera);
+
+    //this.composer.render();
+    //this.renderer.clear();
+
+    requestAnimationFrame(this.render.bind(this)); //No need to animate
+
     if (debug){
       var start_timer = new Date().getTime();
     }
-
     if (debug){
       var end_timer = new Date().getTime();
       composer_pass = end_timer - start_timer
     }
     if(snap) {
-      //console.log(controller)
       capture(controller);
       snap = false;
     }

@@ -19,6 +19,7 @@
   <script src="js/subdivision_module/subdivision.js"></script>
   <script src="js/subdivision_module/lattice_generation.js"></script>
   <script src="js/capture/CCapture.all.min.js"></script>
+  <script src="js/unpkg/OrbitControls.js"></script>
 
   <link rel="stylesheet" href="style.css">
 
@@ -111,6 +112,28 @@
       </div>
   </div>
   
+
+  <script id="vertexShader" type="x-shader/x-vertex">
+    varying vec2 vUv;
+  
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  </script>
+  
+  <script id="fragmentShader" type="x-shader/x-fragment">
+    uniform sampler2D tDiffuse1;
+    uniform sampler2D tDiffuse2;
+  
+    varying vec2 vUv;
+  
+    void main() {
+      vec4 color1 = texture2D(tDiffuse1, vUv);
+      vec4 color2 = texture2D(tDiffuse2, vUv);
+      gl_FragColor = mix(color1, color2, 0.00);
+    }
+  </script>
 
   <!-- MAIN CODE GOES HERE -->
   <script src="js/utils_and_params/utils.js"></script>
