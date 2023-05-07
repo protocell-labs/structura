@@ -608,7 +608,7 @@ function openSimplexNoise(clientSeed) {
 
 //ROCK PARAMS
 let booleanEdge = Math.random() * (20 - 1) + 1; //1-20
-let booleanTotal = Math.random() * (20 - 10) + 10;//10-20
+let booleanTotal = Math.random() * (15 - 5) + 5;//10-20
 
 let noise = openSimplexNoise(Date.now());
 let noiseFreq = Math.random() * (0.08 - 0.01) + 0.01;; //0.01-0.09
