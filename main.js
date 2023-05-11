@@ -25,7 +25,7 @@ var stage = 6;
 var steps = get_steps(stage);
 
 // OVERRIDES
-var aspect_ratio = 0.5625; //// 0.5625 - 16:9 aspect ratio, 0.75 - portrait (used in O B S C V R V M)
+var aspect_ratio = 0.75; //// 0.5625 - 16:9 aspect ratio, 0.75 - portrait (used in O B S C V R V M)
 var explosion_type = 0; // no explosion
 var light_source_type = "south";
 
@@ -90,6 +90,16 @@ var frame_size_x = Math.floor(total_frame_size_x / nr_of_stripes) + 1;
 var frame_size_y = total_frame_size_y;
 var total_width = (frame_size_x - 1) * frame_cell_w + (nr_of_stripes - 1) * gap_w;
 var x_placement;
+
+
+//ROCK PARAMS
+let booleanEdge = Math.random() * (20 - 1) + 1; //1-20
+let booleanTotal = Math.random() * (15 - 5) + 5;//10-20
+
+let noise = openSimplexNoise(Date.now());
+let noiseFreq = Math.random() * (0.08 - 0.01) + 0.01;; //0.01-0.09
+let noiseIter = Math.random() * (8 - 3) + 3;
+
 
 // placement of stripes
 for (var i = 0; i < nr_of_stripes; i++) {
@@ -189,7 +199,7 @@ function View(viewArea) {
   composer.setSize(window.innerWidth, window.innerHeight)
 
   // change scene background to solid color
-  scene.background = new THREE.Color('#080808'); //0xffffff, 0x000000
+  scene.background = new THREE.Color('#292929'); //0xffffff, 0x000000
 
   const color = 0xffffff; //0xffffff
   const amb_intensity = 0.1; //0-1, zero works great for shadows with strong contrast
@@ -327,8 +337,8 @@ View.prototype.addSpaceFrame = function () {
     imesh.rotateY(global_rot_y);
 
     imesh.instanceMatrix.needsUpdate = true
-    imesh.castShadow = true;
-    imesh.receiveShadow = true;
+    //imesh.castShadow = true;
+    //imesh.receiveShadow = true;
     this.scene.add(imesh);
 
 
@@ -354,8 +364,8 @@ View.prototype.addSpaceFrame = function () {
     imesh.rotateY(global_rot_y);
 
     imesh.instanceMatrix.needsUpdate = true
-    imesh.castShadow = true;
-    imesh.receiveShadow = true;
+    //imesh.castShadow = true;
+    //imesh.receiveShadow = true;
     this.scene.add(imesh);
 
 
@@ -414,13 +424,121 @@ View.prototype.addSpaceFrame = function () {
 
 
 
+View.prototype.addRock = function () {
+
+  //custom material shader for voxels
+
+  const directionalLight = new THREE.DirectionalLight( 0xffffff, 1.1 );
+  directionalLight.position.set( -0.5, 1, -0.5 ).normalize();
+
+  let testVertexShader = `
+  varying vec2 vUv;
+  varying vec3 vPos;
+  varying vec3 vNormal;
+
+  void main(){
+    gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.0);
+    vUv = uv;
+    vPos = vec4(projectionMatrix * instanceMatrix * vec4(position, 1.0)).rgb;
+    vNormal = normal;
+  }`
+  let testFragmentShader = `
+  uniform vec3 lightDirection;
+  varying vec2 vUv;
+  varying vec3 vPos;
+  varying vec3 vNormal;
+
+  //simple noise
+  float mod289(float x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
+  vec4 mod289(vec4 x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
+  vec4 perm(vec4 x){return mod289(((x * 34.0) + 1.0) * x);}
+  
+  float noise(vec3 p){
+      vec3 a = floor(p);
+      vec3 d = p - a;
+      d = d * d * (3.0 - 2.0 * d);
+  
+      vec4 b = a.xxyy + vec4(0.0, 1.0, 0.0, 1.0);
+      vec4 k1 = perm(b.xyxy);
+      vec4 k2 = perm(k1.xyxy + b.zzww);
+  
+      vec4 c = k2 + a.zzzz;
+      vec4 k3 = perm(c);
+      vec4 k4 = perm(c + 1.0);
+  
+      vec4 o1 = fract(k3 * (1.0 / 41.0));
+      vec4 o2 = fract(k4 * (1.0 / 41.0));
+  
+      vec4 o3 = o2 * d.z + o1 * (1.0 - d.z);
+      vec2 o4 = o3.yw * d.x + o3.xz * (1.0 - d.x);
+  
+      return o4.y * d.y + o4.x * (1.0 - d.y);
+  }
+
+  float circle(in vec2 _st, in float _radius){
+    vec2 dist = _st-vec2(0.5);
+    return 1.-smoothstep(_radius-(_radius*0.01),
+                          _radius+(_radius*0.01),
+                          dot(dist,dist)*4.0);
+  }
+
+  void main() {
+      vec3 norm = normalize(vNormal);
+      float nDotL = clamp(dot(lightDirection, norm), 0.0, 0.2);
+      float strength = step(nDotL, max(abs(vUv.x - 0.5),abs(vUv.y - 0.5)));
+      gl_FragColor = vec4(vec3(0.8, 0.5, 0.2)*vec3(noise(vPos*2.0))+vec3(circle(vUv, strength*0.05)), 1.0);
+  }`
+
+  const outlineMat = new THREE.ShaderMaterial({
+    uniforms: {
+          lightDirection: { value: directionalLight.position.normalize() }
+        },
+      vertexShader: testVertexShader,
+      fragmentShader: testFragmentShader,
+      side: THREE.DoubleSide
+    });
+  
+  const voxelSize = 5;
+  const voxel = new THREE.BoxGeometry( voxelSize, voxelSize, voxelSize );
+  const voxMat = new THREE.Matrix4();
+  const rock = new THREE.InstancedMesh( voxel, outlineMat, 1000000 );
+
+  //array of random values for boolean locations
+  let rands = [];
+  for (let i = 0; i < 150; i++) {
+    rands.push(map(Math.random(), 0, 1, -50, 50)*1);
+  }
+
+  //draw voxels
+  for ( let i = 0; i < 100; i ++ ) {
+    for (let j = 0; j < 100; j++ ) {
+      for(let k = 0; k < 100; k++ ) {
+        let idx = (j * 100 + i) * 100 + k;
+
+        let p = [i-50, j-50, k-50];
+        let d = sdf(p, rands);
+        if (d < -0.01) {
+          let voxPos = new THREE.Vector3(p[0]*voxelSize, p[1]*voxelSize, p[2]*voxelSize);
+          voxMat.setPosition(voxPos.x, voxPos.y, voxPos.z);
+          rock.setMatrixAt(idx, voxMat);
+        }
+      }
+    }
+  }
+  rock.rotateY(Math.PI/4);
+  rock.rotateX(Math.PI/4);
+  this.scene.add(rock);
+}
+
+
+
 View.prototype.render = function () {
 
     this.composer.render();
     //this.renderer.clear();  //
 
     requestAnimationFrame(this.render.bind(this));
-
+    this.scene.rotateY(0.005);
     //this.renderer.clear();  //
     if (debug){
       var start_timer = new Date().getTime();
@@ -573,7 +691,7 @@ function Controller(viewArea) {
 
   // ADDING GEOMETRY TO THE SCENE
   view.addSpaceFrame();
-
+  view.addRock();
 
 
   view.render();

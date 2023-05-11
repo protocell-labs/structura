@@ -35,9 +35,28 @@ const PixelEdgeShader = {
 		uniform vec2 resolution;
 		varying vec2 vUv;
 
+		//simple noise
+		float rand(vec2 n) { 
+			return fract(sin(dot(n, vec2(12.9898, 4.1414))) * 43758.5453);
+		}
+		
+		float noise(vec2 p){
+			vec2 ip = floor(p);
+			vec2 u = fract(p);
+			u = u*u*(3.0-2.0*u);
+			
+			float res = mix(
+				mix(rand(ip),rand(ip+vec2(1.0,0.0)),u.x),
+				mix(rand(ip+vec2(0.0,1.0)),rand(ip+vec2(1.0,1.0)),u.x),u.y);
+			return res*res;
+		}
+
 		void main() {
       			//set texel to single pixel
 			vec2 texel = vec2( 1.0 / resolution.x, 1.0 / resolution.y );
+
+			vec2 uv = gl_FragCoord.xy;
+			vec3 noiseColors = vec3(noise(uv)* 0.5 + 0.5);
 
 			//get the image
 			vec4 color = texture2D(tDiffuse, vUv);
@@ -47,12 +66,13 @@ const PixelEdgeShader = {
 			float dx = length(color-texRight) / texel.x;
 			float dy = length(color-texBottom) / texel.y;
 		  
-			float threshold = sqrt(pow(dx,2.0) + pow(dy,2.0)) * 0.004; 
+			float threshold = sqrt(pow(dx,2.0) + pow(dy,2.0)) * 0.004;
 		  
 			if(threshold > 0.2) {
-				gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+				gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
 			} else {
-			  gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+			  //gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+				gl_FragColor = vec4(color.rgb+noiseColors, 1.0);
 			}
 
 		}`
