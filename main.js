@@ -35,10 +35,10 @@ var global_rot_y = 0; // global rotation of the model around the Y axis, Math.PI
 
 // SPACE FRAME
 var total_frame_size_x = 10; // 6, 12, 10
-var total_frame_size_y = 15; // 9, 18, 23
-var frame_cell_w = 35; // 50, 25, 25
-var frame_cell_h = 50; // 100, 50, 35
-var frame_cell_d = 25; // 50, 25, 25
+var total_frame_size_y = 12; // 9, 18, 23, 15
+var frame_cell_w = 30; // 50, 25, 25, 35
+var frame_cell_h = 45; // 100, 50, 35, 50
+var frame_cell_d = 100; // 50, 25, 25, 100
 
 // LINKS
 //                           [vert, hor,  a,    b,    c,    d,    e,    f,    g_u,  h_u,  g_l,  h_l]
@@ -69,6 +69,10 @@ var cladding_w = 3; // slat width
 var cladding_thickness = 1; // slat depth
 var cladding_panel_prob = 0.9; // probability that a cladding panel appears
 var cladding_degradation = 0.10; // probability for missing cladding slats
+var cladding_upper = true; // turn on caldding for the upper grid
+var cladding_lower = true; // turn on caldding for the lower grid
+var cladding_left = true; // turn on caldding for the left side
+var cladding_right = true; // turn on caldding for the right side
 
 // NOISE - affects node displacement
 var noise_shift_x = gene_range(-100, 100);
@@ -84,7 +88,7 @@ var modulate_y = true;
 var modulate_z = true;
 
 // STRIPES
-var nr_of_stripes = 3;
+var nr_of_stripes = 1;
 var gap_w = 25; // this value is not always working correctly with stripes, 25
 var frame_size_x = Math.floor(total_frame_size_x / nr_of_stripes) + 1;
 var frame_size_y = total_frame_size_y;
@@ -282,7 +286,7 @@ function View(viewArea) {
   bloomPass.strength = 0.30;
   bloomPass.radius = 0.0;
   bloomPass.threshold = 0.0;
-  this.composer.addPass(bloomPass)
+  //this.composer.addPass(bloomPass)
 
   //Colour to Grayscale 
   //const effectGrayScale = new THREE.ShaderPass( THREE.LuminosityHighPassShader);
@@ -296,11 +300,11 @@ function View(viewArea) {
   effectSobel.uniforms['resolution'].value.y = window.innerHeight * window.devicePixelRatio * 4.0; // same as above
   //this.composer.addPass(effectSobel);
 
-  //Sobel operator
+  //Pixel edge shader
   const effectPixelEdge = new THREE.ShaderPass( THREE.PixelEdgeShader);
   effectPixelEdge.uniforms['resolution'].value.x = window.innerWidth * window.devicePixelRatio * 4.0; // increased the resolution of the texture to get finer edge detection
   effectPixelEdge.uniforms['resolution'].value.y = window.innerHeight * window.devicePixelRatio * 4.0; // same as above
-  //this.composer.addPass(effectPixelEdge);
+  this.composer.addPass(effectPixelEdge);
 
 }
 
@@ -370,7 +374,11 @@ View.prototype.addSpaceFrame = function () {
 
 
     // CLADDING
-    var cladding_offset_vec = new THREE.Vector3(0, 0, 1);
+    var cladding_offset_vec_upper = new THREE.Vector3(0, 0, 1);
+    var cladding_offset_vec_lower = new THREE.Vector3(0, 0, -1);
+    var cladding_offset_vec_left = new THREE.Vector3(-0.5, 0, 0);
+    var cladding_offset_vec_right = new THREE.Vector3(0.5, 0, 0);
+    var cladding_offset_vec;
 
     c_type = "square 1x1";
     var cladding_geometry = new THREE.CylinderGeometry( cylinder_params[c_type][0], cylinder_params[c_type][1], cylinder_params[c_type][2], cylinder_params[c_type][3], cylinder_params[c_type][4], false, Math.PI * 0.25 ); // capped cylinder
@@ -396,9 +404,16 @@ View.prototype.addSpaceFrame = function () {
         var vector_lerp = new THREE.Vector3().lerpVectors(vector_a, vector_b, lerp_f); // interpolate between vectors
         var cladding_length = lerp(gData.cladding[i]['value_a'], gData.cladding[i]['value_b'], lerp_f); // length interpolation
 
-        dummy.scale.set(gData.cladding[i]['width'], cladding_length, gData.cladding[i]['thickness']); // (1, gData.cladding[i]['value_a'], 1)
+        if ((gData.cladding[i]['location'] == 'upper') || (gData.cladding[i]['location'] == 'lower')) {dummy.scale.set(gData.cladding[i]['width'], cladding_length, gData.cladding[i]['thickness']);}
+        else if ((gData.cladding[i]['location'] == 'left') || (gData.cladding[i]['location'] == 'right')) {dummy.scale.set(gData.cladding[i]['thickness'], cladding_length, gData.cladding[i]['width']);}
+
         dummy.quaternion.setFromUnitVectors(axis, vector_lerp.clone().normalize());
         dummy.position.set(lerp(gData.nodes[source_index_a].x, gData.nodes[source_index_b].x, lerp_f), lerp(gData.nodes[source_index_a].y, gData.nodes[source_index_b].y, lerp_f), lerp(gData.nodes[source_index_a].z, gData.nodes[source_index_b].z, lerp_f));
+
+        if (gData.cladding[i]['location'] == 'upper') {cladding_offset_vec = cladding_offset_vec_upper;}
+        else if (gData.cladding[i]['location'] == 'lower') {cladding_offset_vec = cladding_offset_vec_lower;}
+        else if (gData.cladding[i]['location'] == 'left') {cladding_offset_vec = cladding_offset_vec_left;}
+        else if (gData.cladding[i]['location'] == 'right') {cladding_offset_vec = cladding_offset_vec_right;}
 
         dummy.translateOnAxis(cladding_offset_vec, cladding_offset); // offseting the cladding from the surface
         dummy.translateOnAxis(vector_lerp.clone().normalize(), vector_lerp.length() / 2.0); // weird offset I had to introduce to make the cladding be there where it should
@@ -415,8 +430,8 @@ View.prototype.addSpaceFrame = function () {
     imesh.rotateY(global_rot_y);
 
     imesh.instanceMatrix.needsUpdate = true
-    imesh.castShadow = true;
-    imesh.receiveShadow = true;
+    //imesh.castShadow = true;
+    //imesh.receiveShadow = true;
     this.scene.add(imesh);
 
   }
@@ -538,7 +553,8 @@ View.prototype.render = function () {
     //this.renderer.clear();  //
 
     requestAnimationFrame(this.render.bind(this));
-    this.scene.rotateY(0.005);
+    this.scene.rotateY(0.005); // rotates the camera around the scene
+
     //this.renderer.clear();  //
     if (debug){
       var start_timer = new Date().getTime();
