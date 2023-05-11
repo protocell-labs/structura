@@ -28,7 +28,9 @@ function get_steps(stage) {
 
 
 const cylinder_params = {
-  'standard' : [0.5, 0.5, 1, 6, 1] 
+  "standard" : [0.5, 0.5, 1, 6, 1],
+  "square beam" : [0.5, 0.5, 1, 4, 1], // here the side length is less than 1.0 as the first parameter is radius
+  "square 1x1" : [0.7, 0.7, 1, 4, 1] // first parameter is the radius, which gives us a square with a side close to 1.0
 };
 
 

@@ -876,7 +876,7 @@ function space_frame_triprism_gData(origin = new THREE.Vector3(0, 0, 0)) {
   var node_position_z, node_position_y, node_position_z;
   var noise_value_x, noise_value_y, noise_value_z;
 
-  var gData = {'nodes': [], 'links': [], 'joints': [], 'mesh': []};
+  var gData = {'nodes': [], 'links': [], 'joints': [], 'cladding': [], 'mesh': []};
   var node_counter = 0;
   var frame_size_upper_grid = frame_size_x * frame_size_y;
 
@@ -935,6 +935,18 @@ function space_frame_triprism_gData(origin = new THREE.Vector3(0, 0, 0)) {
       } else { // when we come to the top row, we need to point to the previous node, not the next one
         target_idx = node_counter - 1;
         gData['joints'].push({'source': source_idx, 'target': target_idx, 'value': joint_length, 'thickness': joint_thickness_f, 'state': 0, 'visible': joint_visibility});
+      }
+
+      // cladding - vertical orientation
+      if ((j != frame_size_y - 1) && (i != frame_size_x - 1)) {
+        source_idx_a = node_counter;
+        target_idx_a = node_counter + 1;
+        source_idx_b = node_counter + frame_size_y;
+        target_idx_b = node_counter + frame_size_y + 1;
+        link_length_a = calculate_link_length(gData['nodes'][source_idx_a], gData['nodes'][target_idx_a]) * links_length_reduction[0];
+        link_length_b = calculate_link_length(gData['nodes'][source_idx_b], gData['nodes'][target_idx_b]) * links_length_reduction[0];
+        cladding_visibility = gene() < cladding_panel_prob ? true : false;
+        gData['cladding'].push({'source_a': source_idx_a, 'source_b': source_idx_b, 'target_a': target_idx_a, 'target_b': target_idx_b, 'value_a': link_length_a, 'value_b': link_length_b, 'thickness': cladding_thickness, 'width': cladding_w, 'visible': cladding_visibility});
       }
 
       node_counter ++

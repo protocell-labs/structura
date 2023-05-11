@@ -29,57 +29,67 @@ var aspect_ratio = 0.75; //// 0.5625 - 16:9 aspect ratio, 0.75 - portrait (used 
 var explosion_type = 0; // no explosion
 var light_source_type = "south";
 
+// CAMERA
 var global_rot_x = -Math.PI/16; // global rotation of the model around the X axis, -Math.PI/16
-var global_rot_y = 0; // global rotation of the model around the Y axis, Math.PI/16
+var global_rot_y = 0; // global rotation of the model around the Y axis, Math.PI/16, 0
 
+// SPACE FRAME
 var total_frame_size_x = 10; // 6, 12, 10
 var total_frame_size_y = 15; // 9, 18, 23
 var frame_cell_w = 35; // 50, 25, 25
 var frame_cell_h = 50; // 100, 50, 35
 var frame_cell_d = 25; // 50, 25, 25
 
+// LINKS
 //                           [vert, hor,  a,    b,    c,    d,    e,    f,    g_u,  h_u,  g_l,  h_l]
 var frame_links_visibility = [true, true, true, true, true, true, true, true, true, true, true, true];
-var frame_links_thickness  = [2.5,  2.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  1.0,  1.0,  1.0,  1.0];
+var frame_links_thickness  = [2.5,  2.5,  1.0,  1.0,  0.5,  0.5,  0.5,  0.5,  1.0,  1.0,  1.0,  1.0];
 var links_length_reduction = [1.00, 0.85, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90];
 var alternating_cd_ef = true;
 var alternating_gu_hu = true;
 var alternating_gu_hu_pattern = 1; // options: 1, 2, 3, 4, 5 - visible only if alternating_gu_hu_pattern = true
 var alternating_gl_hl = true;
 var alternating_gl_hl_pattern = 1; // options: 1, 2, 3, 4, 5 - visible only if alternating_gl_hl_pattern = true
+var cutoff_vert_links = frame_cell_h * 2.0; // length at which the link will not be displayed anymore
+var cutoff_hor_links = frame_cell_w * 2.0; // length at which the link will not be displayed anymore
+var cutoff_cdef_links = frame_cell_h * 2.0; // length at which the link will not be displayed anymore
+var cutoff_gh_links = frame_cell_h * 2.0; // length at which the link will not be displayed anymore
 
+// JOINTS
 var joint_visibility = true; // joint at vertical links
 var joint_length = frame_links_thickness[0]; // joint at vertical links
 var joint_thickness_f = frame_links_thickness[0] * 3; // joint at vertical links
 var tightener_length_reduction = 0.1; // detail in the middle of cross-links c, d, e, f, g, h
 var tightener_thickness_f = 1.5; // detail in the middle of cross-links c, d, e, f, g, h
 
+// CLADDING
+var cladding_offset = 10; // distance from the space frame
+var cladding_nr = 8; // number of slats in a panel
+var cladding_w = 3; // slat width
+var cladding_thickness = 1; // slat depth
+var cladding_panel_prob = 0.9; // probability that a cladding panel appears
+var cladding_degradation = 0.10; // probability for missing cladding slats
+
+// NOISE - affects node displacement
 var noise_shift_x = gene_range(-100, 100);
 var noise_shift_y = gene_range(-100, 100);
 var noise_shift_z = gene_range(-100, 100);
 var noise_scale_x = 0.15; // 0.005
 var noise_scale_y = 0.15; // 0.005
 var noise_scale_z = 0.15; // 0.005
-var noise_factor = 10.0; // 10.0
+var noise_factor = 5.0; // 10.0
 var noise_component_offset = 1.0; // 1.0, 1.21
-
 var modulate_x = true;
 var modulate_y = true;
 var modulate_z = true;
 
-var cutoff_vert_links = frame_cell_h * 2.0;
-var cutoff_hor_links = frame_cell_w * 2.0;
-var cutoff_cdef_links = frame_cell_h * 2.0;
-var cutoff_gh_links = frame_cell_h * 2.0;
-
+// STRIPES
 var nr_of_stripes = 3;
-var gap_w = 25; // this value is not always working correctly with stripes
+var gap_w = 25; // this value is not always working correctly with stripes, 25
 var frame_size_x = Math.floor(total_frame_size_x / nr_of_stripes) + 1;
 var frame_size_y = total_frame_size_y;
-
 var total_width = (frame_size_x - 1) * frame_cell_w + (nr_of_stripes - 1) * gap_w;
 var x_placement;
-
 
 
 //ROCK PARAMS
@@ -91,7 +101,6 @@ let noiseFreq = Math.random() * (0.08 - 0.01) + 0.01;; //0.01-0.09
 let noiseIter = Math.random() * (8 - 3) + 3;
 
 
-
 // placement of stripes
 for (var i = 0; i < nr_of_stripes; i++) {
   if (nr_of_stripes == 1) {x_placement = 0;}
@@ -99,7 +108,6 @@ for (var i = 0; i < nr_of_stripes; i++) {
   else {x_placement = total_width - i * (total_width * 2) / (nr_of_stripes - 1);} //total_width - i * (total_width * 2) / (nr_of_stripes - 1);
   
   var frame_position = new THREE.Vector3(x_placement, 0, 0);
-
   gData = space_frame_triprism_gData(frame_position);
   gDatas.push(gData);
 }
@@ -292,7 +300,7 @@ function View(viewArea) {
   const effectPixelEdge = new THREE.ShaderPass( THREE.PixelEdgeShader);
   effectPixelEdge.uniforms['resolution'].value.x = window.innerWidth * window.devicePixelRatio * 4.0; // increased the resolution of the texture to get finer edge detection
   effectPixelEdge.uniforms['resolution'].value.y = window.innerHeight * window.devicePixelRatio * 4.0; // same as above
-  this.composer.addPass(effectPixelEdge);
+  //this.composer.addPass(effectPixelEdge);
 
 }
 
@@ -300,11 +308,10 @@ function View(viewArea) {
 
 View.prototype.addSpaceFrame = function () {
 
-  var c_type = "standard";
-
   for (var n = 0; n < gDatas.length; n++) {
     var gData = gDatas[n];
     var dummy = new THREE.Object3D()
+    var c_type = "standard";
     var geometry = new THREE.CylinderGeometry( cylinder_params[c_type][0], cylinder_params[c_type][1], cylinder_params[c_type][2], cylinder_params[c_type][3], cylinder_params[c_type][4], false ); // capped cylinder
     var material = new THREE.MeshPhongMaterial( {color: 0xffffff} ); //THREE.MeshBasicMaterial( {color: 0xff0000} ); THREE.MeshNormalMaterial();
     
@@ -320,7 +327,7 @@ View.prototype.addSpaceFrame = function () {
       var vector = new THREE.Vector3(gData.nodes[target_index].x-gData.nodes[source_index].x, gData.nodes[target_index].y-gData.nodes[source_index].y, gData.nodes[target_index].z-gData.nodes[source_index].z);
       dummy.scale.set(gData.links[i]['thickness'], gData.links[i]['value'], gData.links[i]['thickness']); // (1, gData.links[i]['value'], 1)
       dummy.quaternion.setFromUnitVectors(axis, vector.clone().normalize());
-      dummy.position.set((gData.nodes[source_index].x+gData.nodes[target_index].x)/2, (gData.nodes[source_index].y+gData.nodes[target_index].y)/2, (gData.nodes[source_index].z+gData.nodes[target_index].z)/2)
+      dummy.position.set((gData.nodes[source_index].x+gData.nodes[target_index].x)/2, (gData.nodes[source_index].y+gData.nodes[target_index].y)/2, (gData.nodes[source_index].z+gData.nodes[target_index].z)/2);
       dummy.updateMatrix();
       imesh.setMatrixAt(i, dummy.matrix);
     }
@@ -347,7 +354,7 @@ View.prototype.addSpaceFrame = function () {
       var vector = new THREE.Vector3(gData.nodes[target_index].x-gData.nodes[source_index].x, gData.nodes[target_index].y-gData.nodes[source_index].y, gData.nodes[target_index].z-gData.nodes[source_index].z);
       dummy.scale.set(gData.joints[i]['thickness'], gData.joints[i]['value'], gData.joints[i]['thickness']); // (1, gData.joints[i]['value'], 1)
       dummy.quaternion.setFromUnitVectors(axis, vector.clone().normalize());
-      dummy.position.set(gData.nodes[source_index].x, gData.nodes[source_index].y, gData.nodes[source_index].z)
+      dummy.position.set(gData.nodes[source_index].x, gData.nodes[source_index].y, gData.nodes[source_index].z);
       dummy.updateMatrix();
       imesh.setMatrixAt(i, dummy.matrix);
     }
@@ -361,6 +368,56 @@ View.prototype.addSpaceFrame = function () {
     //imesh.receiveShadow = true;
     this.scene.add(imesh);
 
+
+    // CLADDING
+    var cladding_offset_vec = new THREE.Vector3(0, 0, 1);
+
+    c_type = "square 1x1";
+    var cladding_geometry = new THREE.CylinderGeometry( cylinder_params[c_type][0], cylinder_params[c_type][1], cylinder_params[c_type][2], cylinder_params[c_type][3], cylinder_params[c_type][4], false, Math.PI * 0.25 ); // capped cylinder
+    var cladding_material = new THREE.MeshPhongMaterial( {color: 0xffffff, flatShading: true} );
+    var imesh = new THREE.InstancedMesh( cladding_geometry, cladding_material, gData.cladding.length * cladding_nr );
+    var axis = new THREE.Vector3(0, 1, 0);
+    imesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
+
+    // CLADDING PANEL - repeat for every cladding panel defined between two vertical frame members
+    for (var i = 0; i < gData.cladding.length; i++) {
+      if (gData.cladding[i]['visible'] == false) {continue;} // early termination - skip this cladding panel if it is not visible
+      var source_index_a = gData.cladding[i]['source_a'];
+      var target_index_a = gData.cladding[i]['target_a'];
+      var source_index_b = gData.cladding[i]['source_b'];
+      var target_index_b = gData.cladding[i]['target_b'];
+      var vector_a = new THREE.Vector3(gData.nodes[target_index_a].x-gData.nodes[source_index_a].x, gData.nodes[target_index_a].y-gData.nodes[source_index_a].y, gData.nodes[target_index_a].z-gData.nodes[source_index_a].z);
+      var vector_b = new THREE.Vector3(gData.nodes[target_index_b].x-gData.nodes[source_index_b].x, gData.nodes[target_index_b].y-gData.nodes[source_index_b].y, gData.nodes[target_index_b].z-gData.nodes[source_index_b].z);
+
+      // CLADDING SLAT - repeat for every cladding slat in the panel
+      for (var p = 0; p < cladding_nr; p++) {
+        if (gene() < cladding_degradation) {continue;} // early termination - skip this cladding slat if it is not visible
+        var lerp_f = p / cladding_nr; // interpolation factor
+        var vector_lerp = new THREE.Vector3().lerpVectors(vector_a, vector_b, lerp_f); // interpolate between vectors
+        var cladding_length = lerp(gData.cladding[i]['value_a'], gData.cladding[i]['value_b'], lerp_f); // length interpolation
+
+        dummy.scale.set(gData.cladding[i]['width'], cladding_length, gData.cladding[i]['thickness']); // (1, gData.cladding[i]['value_a'], 1)
+        dummy.quaternion.setFromUnitVectors(axis, vector_lerp.clone().normalize());
+        dummy.position.set(lerp(gData.nodes[source_index_a].x, gData.nodes[source_index_b].x, lerp_f), lerp(gData.nodes[source_index_a].y, gData.nodes[source_index_b].y, lerp_f), lerp(gData.nodes[source_index_a].z, gData.nodes[source_index_b].z, lerp_f));
+
+        dummy.translateOnAxis(cladding_offset_vec, cladding_offset); // offseting the cladding from the surface
+        dummy.translateOnAxis(vector_lerp.clone().normalize(), vector_lerp.length() / 2.0); // weird offset I had to introduce to make the cladding be there where it should
+        dummy.rotateY((gene() - 0.5) * 1.0); // random jitter around member's axis
+
+        dummy.updateMatrix();
+        imesh.setMatrixAt(i * cladding_nr + p, dummy.matrix);
+      }
+
+    }
+
+    // global rotation of the instanced mesh
+    imesh.rotateX(global_rot_x);
+    imesh.rotateY(global_rot_y);
+
+    imesh.instanceMatrix.needsUpdate = true
+    imesh.castShadow = true;
+    imesh.receiveShadow = true;
+    this.scene.add(imesh);
 
   }
 }
