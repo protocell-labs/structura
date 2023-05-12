@@ -78,9 +78,11 @@ var cladding_right = true; // turn on caldding for the right side
 var noise_shift_x = gene_range(-100, 100);
 var noise_shift_y = gene_range(-100, 100);
 var noise_shift_z = gene_range(-100, 100);
-var noise_scale_x = 0.15; // 0.005
-var noise_scale_y = 0.15; // 0.005
-var noise_scale_z = 0.15; // 0.005
+
+var noise_scale_x = 0.005; // 0.005, 0.15
+var noise_scale_y = 0.005; // 0.005, 0.15
+var noise_scale_z = 0.005; // 0.005, 0.15
+
 var noise_factor = 5.0; // 10.0
 var noise_component_offset = 1.0; // 1.0, 1.21
 var modulate_x = true;
@@ -89,7 +91,7 @@ var modulate_z = true;
 
 // STRIPES
 var nr_of_stripes = 1;
-var gap_w = 25; // this value is not always working correctly with stripes, 25
+var gap_w = -15; // this value is not always working correctly with stripes, 25
 var frame_size_x = Math.floor(total_frame_size_x / nr_of_stripes) + 1;
 var frame_size_y = total_frame_size_y;
 var total_width = (frame_size_x - 1) * frame_cell_w + (nr_of_stripes - 1) * gap_w;
@@ -105,14 +107,21 @@ let noiseFreq = Math.random() * (0.08 - 0.01) + 0.01;; //0.01-0.09
 let noiseIter = Math.random() * (8 - 3) + 3;
 
 
+var frame_dummy;
+
 // placement of stripes
 for (var i = 0; i < nr_of_stripes; i++) {
   if (nr_of_stripes == 1) {x_placement = 0;}
   else if (nr_of_stripes == 2) {x_placement = total_width / 2.0 - i * (total_width * 2) / nr_of_stripes;}
   else {x_placement = total_width - i * (total_width * 2) / (nr_of_stripes - 1);} //total_width - i * (total_width * 2) / (nr_of_stripes - 1);
   
-  var frame_position = new THREE.Vector3(x_placement, 0, 0);
-  gData = space_frame_triprism_gData(frame_position);
+  // define transform matrix for each strip
+  frame_dummy = new THREE.Object3D();
+  frame_dummy.scale.set(1, 1, 1);
+  frame_dummy.position.set(x_placement, 0, 0);
+  frame_dummy.updateMatrix();
+
+  gData = space_frame_triprism_gData(frame_dummy);
   gDatas.push(gData);
 }
 

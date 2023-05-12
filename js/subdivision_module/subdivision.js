@@ -870,7 +870,10 @@ function calculate_link_length(source_object, target_object) {
 }
 
 
-function space_frame_triprism_gData(origin = new THREE.Vector3(0, 0, 0)) {
+function space_frame_triprism_gData(frame_dummy) {
+
+  var origin = frame_dummy.position; // frame's position as Vector3
+  var matrix = frame_dummy.matrix; // frame's transform matrix as Matrix4
 
   var source_idx, target_idx, link_length, link_visibility;
   var node_position_z, node_position_y, node_position_z;
@@ -880,25 +883,33 @@ function space_frame_triprism_gData(origin = new THREE.Vector3(0, 0, 0)) {
   var node_counter = 0;
   var frame_size_upper_grid = frame_size_x * frame_size_y;
 
-  
+  var node_position;
+
   // upper rectangle grid - just nodes
   for (var i = 0; i < frame_size_x; i++) {
     for (var j = 0; j < frame_size_y; j++) {
 
       node_position_x = i * frame_cell_w - ((frame_size_x - 1) * frame_cell_w) / 2.0 + origin.x;
       node_position_y = j * frame_cell_h - ((frame_size_y - 1) * frame_cell_h) / 2.0 + origin.y;
-      node_position_z = 0 + origin.z;
+      node_position_z = origin.z + frame_cell_d / 2;
 
-      noise_value_x = perlin3D(i * noise_scale_x + noise_shift_x + origin.x, j * noise_scale_y + noise_shift_y + origin.y, noise_scale_z + noise_shift_z + origin.z);
-      noise_value_y = perlin3D(i * noise_scale_x + noise_shift_x + origin.x, j * noise_scale_y + noise_shift_y + origin.y, noise_scale_z + noise_shift_z + origin.z + noise_component_offset);
-      noise_value_z = perlin3D(i * noise_scale_x + noise_shift_x + origin.x, j * noise_scale_y + noise_shift_y + origin.y, noise_scale_z + noise_shift_z + origin.z + noise_component_offset * 2);
-      
+      node_position = new THREE.Vector3(node_position_x, node_position_y, node_position_z);
+      node_position.applyMatrix4(matrix);
+      node_position_x = node_position.x;
+      node_position_y = node_position.y;
+      node_position_z = node_position.z;
+
+      noise_value_x = perlin3D(node_position_x * noise_scale_x + noise_shift_x, node_position_y * noise_scale_y + noise_shift_y, node_position_z * noise_scale_z + noise_shift_z);
+      noise_value_y = perlin3D(node_position_x * noise_scale_x + noise_shift_x, node_position_y * noise_scale_y + noise_shift_y, node_position_z * noise_scale_z + noise_shift_z + noise_component_offset);
+      noise_value_z = perlin3D(node_position_x * noise_scale_x + noise_shift_x, node_position_y * noise_scale_y + noise_shift_y, node_position_z * noise_scale_z + noise_shift_z + noise_component_offset * 2);
+
       if (modulate_x) {node_position_x += noise_factor * noise_value_x;}
       if (modulate_y) {node_position_y += noise_factor * noise_value_y;}
       if (modulate_z) {node_position_z += noise_factor * noise_value_z;}
 
       source_idx = node_counter;
-      gData['nodes'].push({'id': source_idx, 'connectivity': 0, 'visible': false, 'x': node_position_x, 'y': node_position_y, 'z': node_position_z, 'stage': 1});
+      gData['nodes'].push({'id': source_idx, 'connectivity': 0, 'visible': false, 'x': node_position_x, 'y': node_position_y, 'z': node_position_z});
+      
       node_counter ++
     }
   }
@@ -959,18 +970,25 @@ function space_frame_triprism_gData(origin = new THREE.Vector3(0, 0, 0)) {
 
       node_position_x = i * frame_cell_w - ((frame_size_x - 1) * frame_cell_w) / 2.0 + origin.x + frame_cell_w / 2.0;
       node_position_y = j * frame_cell_h - ((frame_size_y - 1) * frame_cell_h) / 2.0 + origin.y;
-      node_position_z = origin.z - frame_cell_d;
+      node_position_z = origin.z - frame_cell_d / 2;
 
-      noise_value_x = perlin3D(i * noise_scale_x + noise_shift_x + origin.x, j * noise_scale_y + noise_shift_y + origin.y, noise_scale_z + noise_shift_z + origin.z);
-      noise_value_y = perlin3D(i * noise_scale_x + noise_shift_x + origin.x, j * noise_scale_y + noise_shift_y + origin.y, noise_scale_z + noise_shift_z + origin.z + noise_component_offset);
-      noise_value_z = perlin3D(i * noise_scale_x + noise_shift_x + origin.x, j * noise_scale_y + noise_shift_y + origin.y, noise_scale_z + noise_shift_z + origin.z + noise_component_offset * 2);
-      
+      node_position = new THREE.Vector3(node_position_x, node_position_y, node_position_z);
+      node_position.applyMatrix4(matrix);
+      node_position_x = node_position.x;
+      node_position_y = node_position.y;
+      node_position_z = node_position.z;
+
+      noise_value_x = perlin3D(node_position_x * noise_scale_x + noise_shift_x, node_position_y * noise_scale_y + noise_shift_y, node_position_z * noise_scale_z + noise_shift_z);
+      noise_value_y = perlin3D(node_position_x * noise_scale_x + noise_shift_x, node_position_y * noise_scale_y + noise_shift_y, node_position_z * noise_scale_z + noise_shift_z + noise_component_offset);
+      noise_value_z = perlin3D(node_position_x * noise_scale_x + noise_shift_x, node_position_y * noise_scale_y + noise_shift_y, node_position_z * noise_scale_z + noise_shift_z + noise_component_offset * 2);
+
       if (modulate_x) {node_position_x += noise_factor * noise_value_x;}
       if (modulate_y) {node_position_y += noise_factor * noise_value_y;}
       if (modulate_z) {node_position_z += noise_factor * noise_value_z;}
 
       source_idx = node_counter;
-      gData['nodes'].push({'id':node_counter, 'connectivity': 0, 'visible': false, 'x': node_position_x,'y': node_position_y,'z':node_position_z, 'stage': 1});
+      gData['nodes'].push({'id':node_counter, 'connectivity': 0, 'visible': false, 'x': node_position_x,'y': node_position_y,'z':node_position_z});
+      
       node_counter ++
     }
   }
