@@ -870,10 +870,10 @@ function calculate_link_length(source_object, target_object) {
 }
 
 
-function space_frame_triprism_gData(frame_dummy) {
+function space_frame_triprism_gData(frame_position, frame_dummy) {
 
-  var origin = frame_dummy.position; // frame's position as Vector3
-  var matrix = frame_dummy.matrix; // frame's transform matrix as Matrix4
+  var origin = frame_position; // frame's position as Vector3, used for translation
+  var matrix = frame_dummy.matrix; // frame's transform matrix as Matrix4, used only for rotation
 
   var source_idx, target_idx, link_length, link_visibility;
   var node_position_z, node_position_y, node_position_z;

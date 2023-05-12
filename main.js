@@ -30,15 +30,16 @@ var explosion_type = 0; // no explosion
 var light_source_type = "south";
 
 // CAMERA
-var global_rot_x = -Math.PI/16; // global rotation of the model around the X axis, -Math.PI/16
+var global_rot_x = 0; // global rotation of the model around the X axis, -Math.PI/16
 var global_rot_y = 0; // global rotation of the model around the Y axis, Math.PI/16, 0
 
 // SPACE FRAME
 var total_frame_size_x = 10; // 6, 12, 10
-var total_frame_size_y = 12; // 9, 18, 23, 15
+var total_frame_size_y = 10; // 9, 18, 23, 15
 var frame_cell_w = 30; // 50, 25, 25, 35
 var frame_cell_h = 45; // 100, 50, 35, 50
-var frame_cell_d = 100; // 50, 25, 25, 100
+var frame_cell_d = 30; // 50, 25, 25, 100
+var composition_type = "hall"; // "wall", "hall"
 
 // LINKS
 //                           [vert, hor,  a,    b,    c,    d,    e,    f,    g_u,  h_u,  g_l,  h_l]
@@ -83,7 +84,7 @@ var noise_scale_x = 0.005; // 0.005, 0.15
 var noise_scale_y = 0.005; // 0.005, 0.15
 var noise_scale_z = 0.005; // 0.005, 0.15
 
-var noise_factor = 5.0; // 10.0
+var noise_factor = 2.0; // 10.0
 var noise_component_offset = 1.0; // 1.0, 1.21
 var modulate_x = true;
 var modulate_y = true;
@@ -91,7 +92,7 @@ var modulate_z = true;
 
 // STRIPES
 var nr_of_stripes = 1;
-var gap_w = -15; // this value is not always working correctly with stripes, 25
+var gap_w = 25; // this value is not always working correctly with stripes, 25
 var frame_size_x = Math.floor(total_frame_size_x / nr_of_stripes) + 1;
 var frame_size_y = total_frame_size_y;
 var total_width = (frame_size_x - 1) * frame_cell_w + (nr_of_stripes - 1) * gap_w;
@@ -107,23 +108,59 @@ let noiseFreq = Math.random() * (0.08 - 0.01) + 0.01;; //0.01-0.09
 let noiseIter = Math.random() * (8 - 3) + 3;
 
 
+
+// FRAME COMPOSITION
 var frame_dummy;
+var frame_position;
 
-// placement of stripes
-for (var i = 0; i < nr_of_stripes; i++) {
-  if (nr_of_stripes == 1) {x_placement = 0;}
-  else if (nr_of_stripes == 2) {x_placement = total_width / 2.0 - i * (total_width * 2) / nr_of_stripes;}
-  else {x_placement = total_width - i * (total_width * 2) / (nr_of_stripes - 1);} //total_width - i * (total_width * 2) / (nr_of_stripes - 1);
+if (composition_type == "wall") {
+
+  for (var i = 0; i < nr_of_stripes; i++) {
+    if (nr_of_stripes == 1) {x_placement = 0;}
+    else if (nr_of_stripes == 2) {x_placement = total_width / 2.0 - i * (total_width * 2) / nr_of_stripes;}
+    else {x_placement = total_width - i * (total_width * 2) / (nr_of_stripes - 1);} //total_width - i * (total_width * 2) / (nr_of_stripes - 1);
+    
+    frame_position = new THREE.Vector3(x_placement, 0, 0);
+    frame_dummy = new THREE.Object3D();
+    frame_dummy.updateMatrix();
   
-  // define transform matrix for each strip
-  frame_dummy = new THREE.Object3D();
-  frame_dummy.scale.set(1, 1, 1);
-  frame_dummy.position.set(x_placement, 0, 0);
-  frame_dummy.updateMatrix();
+    gData = space_frame_triprism_gData(frame_position, frame_dummy);
+    gDatas.push(gData);
+  }
 
-  gData = space_frame_triprism_gData(frame_dummy);
+} else if (composition_type == "hall") {
+
+  var frame_center_offset = (total_frame_size_x) * frame_cell_w / 2;
+  frame_position = new THREE.Vector3(0, 0, frame_center_offset);
+
+  // right wall
+  frame_dummy = new THREE.Object3D();
+  frame_dummy.rotateY(Math.PI/2);
+  frame_dummy.updateMatrix();
+  gData = space_frame_triprism_gData(frame_position, frame_dummy);
+  gDatas.push(gData);
+
+  // left wall
+  frame_dummy = new THREE.Object3D();
+  frame_dummy.rotateY(-Math.PI/2);
+  frame_dummy.updateMatrix();
+  gData = space_frame_triprism_gData(frame_position, frame_dummy);
+  gDatas.push(gData);
+
+  // back wall
+  frame_dummy = new THREE.Object3D();
+  frame_dummy.rotateY(Math.PI);
+  frame_dummy.updateMatrix();
+  gData = space_frame_triprism_gData(frame_position, frame_dummy);
+  gDatas.push(gData);
+
+  // front wall
+  frame_dummy = new THREE.Object3D();
+  frame_dummy.updateMatrix();
+  gData = space_frame_triprism_gData(frame_position, frame_dummy);
   gDatas.push(gData);
 }
+
 
 
 
@@ -562,7 +599,8 @@ View.prototype.render = function () {
     //this.renderer.clear();  //
 
     requestAnimationFrame(this.render.bind(this));
-    this.scene.rotateY(0.005); // rotates the camera around the scene
+    //this.scene.rotateY(0.005); // rotates the camera around the scene
+    this.scene.rotateX(-0.002);
 
     //this.renderer.clear();  //
     if (debug){
