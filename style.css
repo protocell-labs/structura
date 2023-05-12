@@ -48,6 +48,15 @@ body {
   background-color: black;
 }
 
+#p5loader{
+  top: 50%;
+  left: 50%;
+  margin-top: -50px;
+  margin-left: -200px;
+  position:absolute;
+  z-index: 9999;
+}
+
 #loading_text{
   z-index: 9999;
   font-family: "Courier New", monospace;
@@ -58,7 +67,7 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, 120px);
+  transform: translate(-50%, 80px);
   text-align: center;
 }
 

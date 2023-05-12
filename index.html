@@ -1,6 +1,7 @@
 <head>
   <style> body { margin: 0; } </style>
   <script src="js/unpkg/three.js"></script>
+  <script src="js/unpkg/p5.min.js"></script>
   <script src="js/unpkg/perlin.min.js"></script>
   <script src="js/postprocessing/EffectComposer.js"></script>
   <script src="js/postprocessing/RenderPass.js"></script>
@@ -64,13 +65,13 @@
 
   <!-- LOADING SCREEN -->
   <div id="loading">
+      <div id="p5loader"></div>
       <div id="loading_background"></div>
-      <img src="loading/protocell_labs_lattice_200pix_20fps_4col_v5.gif" class="spinner" style="display: block;">
       <div id="loading_overlay"></div>
       <span id="loading_text" style="font-weight: bold;">
         V E R S E
       </span>
-      <span id="loading_text" style="font-size: 10px; transform: translate(-50%, 145px);">
+      <span id="loading_text" style="font-size: 10px; transform: translate(-50%, 110px);">
         { p r o t o c e l l : l a b s } + o f f i c e c a<br><br>
         2 0 2 3
       </span>
@@ -115,6 +116,7 @@
   <!-- MAIN CODE GOES HERE -->
   <script src="js/utils_and_params/utils.js"></script>
   <script src="js/utils_and_params/params.js"></script>
+  <script src="js/utils_and_params/loading.js"></script>
   <script defer="defer" src="main.js"></script>
 
 </body>
