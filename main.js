@@ -34,12 +34,14 @@ var global_rot_x = 0; // global rotation of the model around the X axis, -Math.P
 var global_rot_y = 0; // global rotation of the model around the Y axis, Math.PI/16, 0
 
 // SPACE FRAME
-var total_frame_size_x = 10; // 6, 12, 10
-var total_frame_size_y = 10; // 9, 18, 23, 15
+var total_frame_size_x = 8; // doesn't work smaller than 8 with "hall", 6, 12, 10
+var total_frame_size_y = 12; // with "hall", even numbers work best, 9, 18, 23, 15
 var frame_cell_w = 30; // 50, 25, 25, 35
 var frame_cell_h = 45; // 100, 50, 35, 50
 var frame_cell_d = 30; // 50, 25, 25, 100
 var composition_type = "hall"; // "wall", "hall"
+var nr_of_stripes = 2; // applied only with "wall" composition_type
+var gap_w = 25; // applied when stripes are used
 
 // LINKS
 //                           [vert, hor,  a,    b,    c,    d,    e,    f,    g_u,  h_u,  g_l,  h_l]
@@ -68,8 +70,8 @@ var cladding_offset = 10; // distance from the space frame
 var cladding_nr = 8; // number of slats in a panel
 var cladding_w = 3; // slat width
 var cladding_thickness = 1; // slat depth
-var cladding_panel_prob = 0.9; // probability that a cladding panel appears
-var cladding_degradation = 0.10; // probability for missing cladding slats
+var cladding_panel_prob = 1.0; // probability that a cladding panel appears, 0.9
+var cladding_degradation = 0.0; // probability for missing cladding slats, 0.1
 var cladding_upper = true; // turn on caldding for the upper grid
 var cladding_lower = true; // turn on caldding for the lower grid
 var cladding_left = true; // turn on caldding for the left side
@@ -79,24 +81,14 @@ var cladding_right = true; // turn on caldding for the right side
 var noise_shift_x = gene_range(-100, 100);
 var noise_shift_y = gene_range(-100, 100);
 var noise_shift_z = gene_range(-100, 100);
-
 var noise_scale_x = 0.005; // 0.005, 0.15
 var noise_scale_y = 0.005; // 0.005, 0.15
 var noise_scale_z = 0.005; // 0.005, 0.15
-
-var noise_factor = 2.0; // 10.0
+var noise_factor = 5.0; // 10.0
 var noise_component_offset = 1.0; // 1.0, 1.21
 var modulate_x = true;
 var modulate_y = true;
 var modulate_z = true;
-
-// STRIPES
-var nr_of_stripes = 1;
-var gap_w = 25; // this value is not always working correctly with stripes, 25
-var frame_size_x = Math.floor(total_frame_size_x / nr_of_stripes) + 1;
-var frame_size_y = total_frame_size_y;
-var total_width = (frame_size_x - 1) * frame_cell_w + (nr_of_stripes - 1) * gap_w;
-var x_placement;
 
 
 //ROCK PARAMS
@@ -110,10 +102,15 @@ let noiseIter = Math.random() * (8 - 3) + 3;
 
 
 // FRAME COMPOSITION
-var frame_dummy;
-var frame_position;
+var frame_position, frame_dummy;
+var frame_size_x, frame_size_y;
 
 if (composition_type == "wall") {
+
+  frame_size_x = Math.floor(total_frame_size_x / nr_of_stripes) + 1;
+  frame_size_y = total_frame_size_y;
+  var total_width = (frame_size_x - 1) * frame_cell_w + (nr_of_stripes - 1) * gap_w;
+  var x_placement;
 
   for (var i = 0; i < nr_of_stripes; i++) {
     if (nr_of_stripes == 1) {x_placement = 0;}
@@ -130,6 +127,8 @@ if (composition_type == "wall") {
 
 } else if (composition_type == "hall") {
 
+  frame_size_y = total_frame_size_y;
+  frame_size_x = total_frame_size_x + 1;
   var frame_center_offset = (total_frame_size_x) * frame_cell_w / 2;
   frame_position = new THREE.Vector3(0, 0, frame_center_offset);
 
@@ -154,11 +153,37 @@ if (composition_type == "wall") {
   gData = space_frame_triprism_gData(frame_position, frame_dummy);
   gDatas.push(gData);
 
-  // front wall
+  // front wall - upper full part
+  frame_size_y = Math.floor(total_frame_size_y / 2) + 1; // 6
+  var frame_y_offset = total_frame_size_y % 2 == 0 ? -frame_cell_h / 2 : 0; // additional y offset depending on if total_frame_size_y is odd or even
+  frame_position = new THREE.Vector3(0, (frame_size_y - 1) * frame_cell_h / 2 + frame_y_offset, frame_center_offset);
+
   frame_dummy = new THREE.Object3D();
   frame_dummy.updateMatrix();
   gData = space_frame_triprism_gData(frame_position, frame_dummy);
   gDatas.push(gData);
+
+  // front wall - lower left half
+  frame_size_y = total_frame_size_y - Math.floor(total_frame_size_y / 2); // 5
+  frame_size_x =  Math.floor(total_frame_size_x / 2) - 1; // 4
+  var frame_x_offset = total_frame_size_x % 2 == 0 ? 1 : 1.25; // additional x offset depending on if total_frame_size_x is odd or even
+  frame_position = new THREE.Vector3(-(total_frame_size_x / 4 + frame_x_offset) * frame_cell_w, -(frame_size_y - 1) * frame_cell_h / 2 + frame_y_offset, frame_center_offset);
+
+  frame_dummy = new THREE.Object3D();
+  frame_dummy.updateMatrix();
+  gData = space_frame_triprism_gData(frame_position, frame_dummy);
+  gDatas.push(gData);
+
+  // front wall - lower right half
+  frame_size_y = total_frame_size_y - Math.floor(total_frame_size_y / 2); // 5
+  frame_size_x = Math.floor(total_frame_size_x / 2) - 1; // 4
+  frame_position = new THREE.Vector3((total_frame_size_x / 4 + frame_x_offset) * frame_cell_w, -(frame_size_y - 1) * frame_cell_h / 2 + frame_y_offset, frame_center_offset);
+
+  frame_dummy = new THREE.Object3D();
+  frame_dummy.updateMatrix();
+  gData = space_frame_triprism_gData(frame_position, frame_dummy);
+  gDatas.push(gData);
+
 }
 
 
@@ -424,7 +449,8 @@ View.prototype.addSpaceFrame = function () {
     var cladding_offset_vec_lower = new THREE.Vector3(0, 0, -1);
     var cladding_offset_vec_left = new THREE.Vector3(-0.5, 0, 0);
     var cladding_offset_vec_right = new THREE.Vector3(0.5, 0, 0);
-    var cladding_offset_vec;
+    var cladding_offset_vec, base_x_vec;
+    var first_dim, second_dim, orientation_check;
 
     c_type = "square 1x1";
     var cladding_geometry = new THREE.CylinderGeometry( cylinder_params[c_type][0], cylinder_params[c_type][1], cylinder_params[c_type][2], cylinder_params[c_type][3], cylinder_params[c_type][4], false, Math.PI * 0.25 ); // capped cylinder
@@ -450,16 +476,36 @@ View.prototype.addSpaceFrame = function () {
         var vector_lerp = new THREE.Vector3().lerpVectors(vector_a, vector_b, lerp_f); // interpolate between vectors
         var cladding_length = lerp(gData.cladding[i]['value_a'], gData.cladding[i]['value_b'], lerp_f); // length interpolation
 
-        if ((gData.cladding[i]['location'] == 'upper') || (gData.cladding[i]['location'] == 'lower')) {dummy.scale.set(gData.cladding[i]['width'], cladding_length, gData.cladding[i]['thickness']);}
-        else if ((gData.cladding[i]['location'] == 'left') || (gData.cladding[i]['location'] == 'right')) {dummy.scale.set(gData.cladding[i]['thickness'], cladding_length, gData.cladding[i]['width']);}
+        base_x_vec = new THREE.Vector3();
+        gData.cladding[i]['matrix'].extractBasis(base_x_vec, new THREE.Vector3(), new THREE.Vector3());
+        orientation_check = Math.round(Math.sin(base_x_vec.angleTo(new THREE.Vector3(1, 0, 0)))); // this will be 0 for 0 and 180 deg rotation, and 1 for 90 and 270 deg rotation of the space frame
 
+        // choose the right scaling dimension for the cladding slat based on its location and the rotation of the space frame
+        if (((gData.cladding[i]['location'] == 'upper') || (gData.cladding[i]['location'] == 'lower')) && (orientation_check == 0)) { // 0 and 180 deg rotation
+          first_dim = gData.cladding[i]['width'];
+          second_dim = gData.cladding[i]['thickness'];
+
+        } else if (((gData.cladding[i]['location'] == 'upper') || (gData.cladding[i]['location'] == 'lower')) && (orientation_check == 1)) { // 90 and 270 deg rotation
+          first_dim = gData.cladding[i]['thickness']; 
+          second_dim = gData.cladding[i]['width'];
+
+        } else if (((gData.cladding[i]['location'] == 'left') || (gData.cladding[i]['location'] == 'right')) && (orientation_check == 0)) { // 0 and 180 deg rotation
+          first_dim = gData.cladding[i]['thickness'];
+          second_dim = gData.cladding[i]['width'];
+
+        } else if (((gData.cladding[i]['location'] == 'left') || (gData.cladding[i]['location'] == 'right')) && (orientation_check == 1)) { // 90 and 270 deg rotation
+          first_dim = gData.cladding[i]['width'];
+          second_dim = gData.cladding[i]['thickness'];
+        }
+
+        dummy.scale.set(first_dim, cladding_length, second_dim);
         dummy.quaternion.setFromUnitVectors(axis, vector_lerp.clone().normalize());
         dummy.position.set(lerp(gData.nodes[source_index_a].x, gData.nodes[source_index_b].x, lerp_f), lerp(gData.nodes[source_index_a].y, gData.nodes[source_index_b].y, lerp_f), lerp(gData.nodes[source_index_a].z, gData.nodes[source_index_b].z, lerp_f));
 
-        if (gData.cladding[i]['location'] == 'upper') {cladding_offset_vec = cladding_offset_vec_upper;}
-        else if (gData.cladding[i]['location'] == 'lower') {cladding_offset_vec = cladding_offset_vec_lower;}
-        else if (gData.cladding[i]['location'] == 'left') {cladding_offset_vec = cladding_offset_vec_left;}
-        else if (gData.cladding[i]['location'] == 'right') {cladding_offset_vec = cladding_offset_vec_right;}
+        if (gData.cladding[i]['location'] == 'upper') {cladding_offset_vec = cladding_offset_vec_upper.clone().applyMatrix4(gData.cladding[i]['matrix']);}
+        else if (gData.cladding[i]['location'] == 'lower') {cladding_offset_vec = cladding_offset_vec_lower.clone().applyMatrix4(gData.cladding[i]['matrix']);}
+        else if (gData.cladding[i]['location'] == 'left') {cladding_offset_vec = cladding_offset_vec_left.clone().applyMatrix4(gData.cladding[i]['matrix']);}
+        else if (gData.cladding[i]['location'] == 'right') {cladding_offset_vec = cladding_offset_vec_right.clone().applyMatrix4(gData.cladding[i]['matrix']);}
 
         dummy.translateOnAxis(cladding_offset_vec, cladding_offset); // offseting the cladding from the surface
         dummy.translateOnAxis(vector_lerp.clone().normalize(), vector_lerp.length() / 2.0); // weird offset I had to introduce to make the cladding be there where it should
@@ -599,8 +645,8 @@ View.prototype.render = function () {
     //this.renderer.clear();  //
 
     requestAnimationFrame(this.render.bind(this));
-    //this.scene.rotateY(0.005); // rotates the camera around the scene
-    this.scene.rotateX(-0.002);
+    this.scene.rotateY(0.002); // rotates the camera around the scene
+    this.scene.rotateX(-0.005);
 
     //this.renderer.clear();  //
     if (debug){
