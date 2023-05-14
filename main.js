@@ -93,11 +93,11 @@ var modulate_z = true;
 
 //ROCK PARAMS
 let booleanEdge = Math.random() * (20 - 1) + 1; //1-20
-let booleanTotal = Math.random() * (15 - 5) + 5;//10-20
+let booleanTotal = Math.random() * (15 - 8) + 8;//10-20
 
 let noise = openSimplexNoise(Date.now());
 let noiseFreq = Math.random() * (0.08 - 0.01) + 0.01;; //0.01-0.09
-let noiseIter = Math.random() * (8 - 3) + 3;
+let noiseIter = Math.random() * (9 - 5) + 5;
 
 
 
@@ -589,11 +589,19 @@ View.prototype.addRock = function () {
                           dot(dist,dist)*4.0);
   }
 
+  float line(in vec2 p, in vec2 a, in vec2 b) {
+    vec2 ba = b - a;
+    vec2 pa = p - a;
+    float h = clamp(dot(pa, ba) / dot(ba, ba), 0., 1.);
+    return length(pa - h * ba);
+  }
+  
   void main() {
       vec3 norm = normalize(vNormal);
-      float nDotL = clamp(dot(lightDirection, norm), 0.0, 0.2);
+      float nDotL = clamp(dot(lightDirection, norm), 0.0, 0.9);
       float strength = step(nDotL, max(abs(vUv.x - 0.5),abs(vUv.y - 0.5)));
-      gl_FragColor = vec4(vec3(0.8, 0.5, 0.2)*vec3(noise(vPos*2.0))+vec3(circle(vUv, strength*0.05)), 1.0);
+      vec3 col = vec3(0.5, 0.2, 0.2);
+      gl_FragColor = vec4(col*vec3(noise(vPos*4.0))+vec3(line(vUv, vec2(-1.0, 0.0), vec2(0.0,1.0))-strength*0.01, 0.0, 0.0), 1.0);//circle(vUv, 0.05+strength)
   }`
 
   const outlineMat = new THREE.ShaderMaterial({
@@ -645,8 +653,8 @@ View.prototype.render = function () {
     //this.renderer.clear();  //
 
     requestAnimationFrame(this.render.bind(this));
-    this.scene.rotateY(0.002); // rotates the camera around the scene
-    this.scene.rotateX(-0.005);
+    //this.scene.rotateY(0.002); // rotates the camera around the scene
+    //this.scene.rotateX(-0.005);
 
     //this.renderer.clear();  //
     if (debug){
