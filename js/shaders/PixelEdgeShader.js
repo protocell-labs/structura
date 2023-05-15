@@ -51,12 +51,30 @@ const PixelEdgeShader = {
 			return res*res;
 		}
 
+		float blugausnoise(vec2 c1) {
+
+			vec3 cx = c1.x+ vec3(-1,0,1);
+			vec4 f0 = fract(vec4(cx* 9.1031,c1.y* 8.1030));
+			vec4 f1 = fract(vec4(cx* 7.0973,c1.y* 6.0970));
+			vec4 t0 = vec4(f0.xw,f1.xw);//fract(c0.xyxy* vec4(.1031,.1030,.0973,.0970));
+			vec4 t1 = vec4(f0.yw,f1.yw);//fract(c1.xyxy* vec4(.1031,.1030,.0973,.0970));
+			vec4 t2 = vec4(f0.zw,f1.zw);//fract(c2.xyxy* vec4(.1031,.1030,.0973,.0970));
+			vec4 p0 = t0+ dot(t0,t0.wzxy+ 19.19);
+			vec4 p1 = t1+ dot(t1,t1.wzxy+ 19.19);
+			vec4 p2 = t2+ dot(t2,t2.wzxy+ 19.19);
+			vec4 n0 = fract(p0.zywx* (p0.xxyz+ p0.yzzw));
+			vec4 n1 = fract(p1.zywx* (p1.xxyz+ p1.yzzw));
+			vec4 n2 = fract(p2.zywx* (p2.xxyz+ p2.yzzw));
+		
+			return dot(0.5* n1- 0.125* (n0+ n2),vec4(1));
+		}
+
 		void main() {
       			//set texel to single pixel
 			vec2 texel = vec2( 1.0 / resolution.x, 1.0 / resolution.y );
 
 			vec2 uv = gl_FragCoord.xy;
-			vec3 noiseColors = vec3(noise(uv)* 0.5 + 0.5);
+			vec3 noiseColors = vec3(blugausnoise(uv)* 0.5 + 0.5);
 
 			//get the image
 			vec4 color = texture2D(tDiffuse, vUv);
