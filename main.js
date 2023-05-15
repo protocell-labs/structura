@@ -34,13 +34,16 @@ var global_rot_x = 0; // global rotation of the model around the X axis, -Math.P
 var global_rot_y = 0; // global rotation of the model around the Y axis, Math.PI/16, 0
 
 // SPACE FRAME
-var total_frame_size_x = 8; // doesn't work smaller than 8 with "hall", 6, 12, 10
-var total_frame_size_y = 12; // with "hall", even numbers work best, 9, 18, 23, 15
+var total_frame_size_x = 9; // doesn't work smaller than 8 with "hall", 6, 12, 10
+var total_frame_size_y = 10; // with "hall", even numbers work best, 9, 18, 23, 15
 var frame_cell_w = 30; // 50, 25, 25, 35
 var frame_cell_h = 45; // 100, 50, 35, 50
-var frame_cell_d = 30; // 50, 25, 25, 100
-var composition_type = "hall"; // "wall", "hall"
-var nr_of_stripes = 2; // applied only with "wall" composition_type
+var frame_cell_d = 30; // 50, 25, 25, 100, 30
+var composition_type = "narthex"; // "wall", "hall", "nave", "narthex"
+var narthex_type = "only edges"; // "full", "only edges", "only middle"
+var lower_sides_missing = [false, false, false, false]; // removes frame parts from the lower sides, [front, right, back, left]
+var strip_size_x = 2; // applied only with "narthex_2" and "narthex_3"
+var nr_of_stripes = 2; // applied only with "wall" and "nave" composition_type
 var gap_w = 25; // applied when stripes are used
 
 // LINKS
@@ -61,7 +64,7 @@ var cutoff_gh_links = frame_cell_h * 2.0; // length at which the link will not b
 // JOINTS
 var joint_visibility = true; // joint at vertical links
 var joint_length = frame_links_thickness[0]; // joint at vertical links
-var joint_thickness_f = frame_links_thickness[0] * 3; // joint at vertical links
+var joint_thickness_f = frame_links_thickness[0] * 2; // joint at vertical links, 3
 var tightener_length_reduction = 0.1; // detail in the middle of cross-links c, d, e, f, g, h
 var tightener_thickness_f = 1.5; // detail in the middle of cross-links c, d, e, f, g, h
 
@@ -73,7 +76,7 @@ var cladding_thickness = 1; // slat depth
 var cladding_panel_prob = 1.0; // probability that a cladding panel appears, 0.9
 var cladding_degradation = 0.0; // probability for missing cladding slats, 0.1
 var cladding_upper = true; // turn on caldding for the upper grid
-var cladding_lower = true; // turn on caldding for the lower grid
+var cladding_lower = false; // turn on caldding for the lower grid
 var cladding_left = true; // turn on caldding for the left side
 var cladding_right = true; // turn on caldding for the right side
 
@@ -127,31 +130,20 @@ if (composition_type == "wall") {
 
 } else if (composition_type == "hall") {
 
+  // right, left and back walls
   frame_size_y = total_frame_size_y;
   frame_size_x = total_frame_size_x + 1;
   var frame_center_offset = (total_frame_size_x) * frame_cell_w / 2;
   frame_position = new THREE.Vector3(0, 0, frame_center_offset);
+  var angle_factors = [-0.5, 0.5, 1]; // quick way to iterate through the correct angles - skips zero
 
-  // right wall
-  frame_dummy = new THREE.Object3D();
-  frame_dummy.rotateY(Math.PI/2);
-  frame_dummy.updateMatrix();
-  gData = space_frame_triprism_gData(frame_position, frame_dummy);
-  gDatas.push(gData);
-
-  // left wall
-  frame_dummy = new THREE.Object3D();
-  frame_dummy.rotateY(-Math.PI/2);
-  frame_dummy.updateMatrix();
-  gData = space_frame_triprism_gData(frame_position, frame_dummy);
-  gDatas.push(gData);
-
-  // back wall
-  frame_dummy = new THREE.Object3D();
-  frame_dummy.rotateY(Math.PI);
-  frame_dummy.updateMatrix();
-  gData = space_frame_triprism_gData(frame_position, frame_dummy);
-  gDatas.push(gData);
+  for (var i = 0; i < angle_factors.length; i++) {
+    frame_dummy = new THREE.Object3D();
+    frame_dummy.rotateY(angle_factors[i] * Math.PI);
+    frame_dummy.updateMatrix();
+    gData = space_frame_triprism_gData(frame_position, frame_dummy);
+    gDatas.push(gData);
+  }
 
   // front wall - upper full part
   frame_size_y = Math.floor(total_frame_size_y / 2) + 1; // 6
@@ -163,26 +155,86 @@ if (composition_type == "wall") {
   gData = space_frame_triprism_gData(frame_position, frame_dummy);
   gDatas.push(gData);
 
-  // front wall - lower left half
+  // front wall - lower left and lower right half
   frame_size_y = total_frame_size_y - Math.floor(total_frame_size_y / 2); // 5
   frame_size_x =  Math.floor(total_frame_size_x / 2) - 1; // 4
   var frame_x_offset = total_frame_size_x % 2 == 0 ? 1 : 1.25; // additional x offset depending on if total_frame_size_x is odd or even
-  frame_position = new THREE.Vector3(-(total_frame_size_x / 4 + frame_x_offset) * frame_cell_w, -(frame_size_y - 1) * frame_cell_h / 2 + frame_y_offset, frame_center_offset);
+  var trans_vec_factors = [-1, 1]; // quick way to iterate through the correct translation factors - skips zero
 
-  frame_dummy = new THREE.Object3D();
-  frame_dummy.updateMatrix();
-  gData = space_frame_triprism_gData(frame_position, frame_dummy);
-  gDatas.push(gData);
+  for (var i = 0; i < trans_vec_factors.length; i++) {
+    frame_position = new THREE.Vector3(trans_vec_factors[i] * (total_frame_size_x / 4 + frame_x_offset) * frame_cell_w, -(frame_size_y - 1) * frame_cell_h / 2 + frame_y_offset, frame_center_offset);
+    frame_dummy = new THREE.Object3D();
+    frame_dummy.updateMatrix();
+    gData = space_frame_triprism_gData(frame_position, frame_dummy);
+    gDatas.push(gData);
+  }
 
-  // front wall - lower right half
-  frame_size_y = total_frame_size_y - Math.floor(total_frame_size_y / 2); // 5
-  frame_size_x = Math.floor(total_frame_size_x / 2) - 1; // 4
-  frame_position = new THREE.Vector3((total_frame_size_x / 4 + frame_x_offset) * frame_cell_w, -(frame_size_y - 1) * frame_cell_h / 2 + frame_y_offset, frame_center_offset);
+} else if (composition_type == "nave") {
 
-  frame_dummy = new THREE.Object3D();
-  frame_dummy.updateMatrix();
-  gData = space_frame_triprism_gData(frame_position, frame_dummy);
-  gDatas.push(gData);
+  frame_size_x = Math.floor(total_frame_size_x / nr_of_stripes) + 1;
+  frame_size_y = total_frame_size_y;
+  var total_width = (frame_size_x - 1) * frame_cell_w + (nr_of_stripes - 1) * gap_w;
+  var frame_center_offset = (total_frame_size_x) * frame_cell_w / 2 + (nr_of_stripes - 1) * gap_w / 2 ;
+
+  var x_placement;
+
+  for (var n = 0; n < 4; n++) {
+    for (var i = 0; i < nr_of_stripes; i++) {
+
+      if (nr_of_stripes == 1) {x_placement = 0;}
+      else if (nr_of_stripes == 2) {x_placement = total_width / 2.0 - i * (total_width * 2) / nr_of_stripes;}
+      else {x_placement = total_width - i * (total_width * 2) / (nr_of_stripes - 1);} //total_width - i * (total_width * 2) / (nr_of_stripes - 1);
+      
+      frame_position = new THREE.Vector3(x_placement, 0, frame_center_offset);
+      frame_dummy = new THREE.Object3D();
+      frame_dummy.rotateY(n * Math.PI/2);
+      frame_dummy.updateMatrix();
+    
+      gData = space_frame_triprism_gData(frame_position, frame_dummy);
+      gDatas.push(gData);
+    }
+  }
+
+} else if (composition_type == "narthex") {
+  
+  // top full walls
+  frame_size_x = total_frame_size_x + 1;
+  frame_size_y = Math.floor(total_frame_size_y / 2) + 1; // 6
+  var frame_center_offset = (total_frame_size_x) * frame_cell_w / 2;
+  var frame_y_offset = total_frame_size_y % 2 == 0 ? -frame_cell_h / 2 : 0; // additional y offset depending on if total_frame_size_y is odd or even
+  frame_position = new THREE.Vector3(0, (frame_size_y - 1) * frame_cell_h / 2 + frame_y_offset, frame_center_offset);
+
+  for (var n = 0; n < 4; n++) {
+    frame_dummy = new THREE.Object3D();
+    frame_dummy.rotateY(n * Math.PI/2);
+    frame_dummy.updateMatrix();
+    gData = space_frame_triprism_gData(frame_position, frame_dummy);
+    gDatas.push(gData);
+  }
+
+  // lower stripes
+  frame_size_x = strip_size_x;
+
+  for (var n = 0; n < 4; n++) {
+    // early termination rules for sides
+    if (lower_sides_missing[n] == true) {continue;} // skip this side
+
+    for (var i = -1; i < 2; i++) { //-1, 0, 1
+      // early termination rules for stripes
+      if ((i == 0) && (narthex_type == "only edges")) {continue;} // skip the middle strip
+      else if ((i != 0) && (narthex_type == "only middle")) {continue;} // skip the edge strips
+
+      x_placement = i * (total_frame_size_x / 2 - (strip_size_x - 1) / 2) * frame_cell_w;
+
+      frame_position = new THREE.Vector3(x_placement, -(frame_size_y - 1) * frame_cell_h / 2 + frame_y_offset, frame_center_offset);
+      frame_dummy = new THREE.Object3D();
+      frame_dummy.rotateY(n * Math.PI/2);
+      frame_dummy.updateMatrix();
+
+      gData = space_frame_triprism_gData(frame_position, frame_dummy);
+      gDatas.push(gData);
+    }
+  }
 
 }
 
@@ -645,8 +697,8 @@ View.prototype.render = function () {
     //this.renderer.clear();  //
 
     requestAnimationFrame(this.render.bind(this));
-    this.scene.rotateY(0.002); // rotates the camera around the scene
-    this.scene.rotateX(-0.005);
+    //this.scene.rotateY(0.002); // rotates the camera around the scene
+    this.scene.rotateX(-0.002);
 
     //this.renderer.clear();  //
     if (debug){
@@ -800,7 +852,7 @@ function Controller(viewArea) {
 
   // ADDING GEOMETRY TO THE SCENE
   view.addSpaceFrame();
-  view.addRock();
+  //view.addRock();
 
 
   view.render();
