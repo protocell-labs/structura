@@ -654,7 +654,7 @@ View.prototype.render = function () {
 
     requestAnimationFrame(this.render.bind(this));
     //this.scene.rotateY(0.002); // rotates the camera around the scene
-    //this.scene.rotateX(-0.005);
+    this.scene.rotateX(-0.005);
 
     //this.renderer.clear();  //
     if (debug){
