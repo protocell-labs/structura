@@ -95,8 +95,8 @@ var modulate_z = true;
 
 
 //ROCK PARAMS
-let booleanEdge = Math.random() * (20 - 1) + 1; //1-20
-let booleanTotal = Math.random() * (15 - 8) + 8;//10-20
+let booleanEdge = Math.random() * (20 - 5) + 1; //1-20
+let booleanTotal = Math.random() * (18 - 8) + 10;//10-20
 
 let noise = openSimplexNoise(Date.now());
 let noiseFreq = Math.random() * (0.08 - 0.01) + 0.01;; //0.01-0.09
@@ -303,7 +303,7 @@ function View(viewArea) {
     
   
   ///SCALING
-  cam_factor_mod = cam_factor * Math.min(viewportWidth/1000, viewportHeight/1000);
+  cam_factor_mod = cam_factor * Math.min(viewportWidth/1500, viewportHeight/1500);
 
   renderer.setSize( viewportWidth, viewportHeight );
   renderer.shadowMap.enabled = true;
@@ -312,6 +312,11 @@ function View(viewArea) {
   viewport.appendChild(renderer.domElement);
 
   var scene = new THREE.Scene();
+  
+  //oblique transform
+  scene.matrixAutoUpdate = false;
+  scene.matrix.makeShear(0, 0, 0, 0, 0, -1);
+  scene.updateMatrixWorld(true);
 
   //var camera = new THREE.PerspectiveCamera( 75, viewportWidth / viewportHeight, 0.1, 10000 );
   //camera.position.set(0,0, 100);
@@ -326,7 +331,7 @@ function View(viewArea) {
   composer.setSize(window.innerWidth, window.innerHeight)
 
   // change scene background to solid color
-  scene.background = new THREE.Color('#292929'); //0xffffff, 0x000000
+  scene.background = new THREE.Color('#cccccc'); //0xffffff, 0x000000
 
   const color = 0xffffff; //0xffffff
   const amb_intensity = 0.1; //0-1, zero works great for shadows with strong contrast
@@ -506,7 +511,7 @@ View.prototype.addSpaceFrame = function () {
 
     c_type = "square 1x1";
     var cladding_geometry = new THREE.CylinderGeometry( cylinder_params[c_type][0], cylinder_params[c_type][1], cylinder_params[c_type][2], cylinder_params[c_type][3], cylinder_params[c_type][4], false, Math.PI * 0.25 ); // capped cylinder
-    var cladding_material = new THREE.MeshPhongMaterial( {color: 0xffffff, flatShading: true} );
+    var cladding_material = new THREE.MeshPhongMaterial( {color: 0x0000ff, flatShading: true} );
     var imesh = new THREE.InstancedMesh( cladding_geometry, cladding_material, gData.cladding.length * cladding_nr );
     var axis = new THREE.Vector3(0, 1, 0);
     imesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
@@ -650,10 +655,10 @@ View.prototype.addRock = function () {
   
   void main() {
       vec3 norm = normalize(vNormal);
-      float nDotL = clamp(dot(lightDirection, norm), 0.0, 0.9);
+      float nDotL = clamp(dot(lightDirection, norm), 0.0, 0.1);
       float strength = step(nDotL, max(abs(vUv.x - 0.5),abs(vUv.y - 0.5)));
-      vec3 col = vec3(0.5, 0.2, 0.2);
-      gl_FragColor = vec4(col*vec3(noise(vPos*4.0))+vec3(line(vUv, vec2(-1.0, 0.0), vec2(0.0,1.0))-strength*0.01, 0.0, 0.0), 1.0);//circle(vUv, 0.05+strength)
+      vec3 col = vec3(0.99, 0.99, 0.0)*vec3(noise(vPos*4.0)*0.9+0.9);
+      gl_FragColor = vec4(col/vec3(line(vUv, vec2(-1.0, 0.0), vec2(0.0,1.0))+strength*2.0), 1.0);//circle(vUv, 0.05+strength)
   }`
 
   const outlineMat = new THREE.ShaderMaterial({
@@ -706,7 +711,7 @@ View.prototype.render = function () {
 
     requestAnimationFrame(this.render.bind(this));
     //this.scene.rotateY(0.002); // rotates the camera around the scene
-    this.scene.rotateX(-0.002);
+    //this.scene.rotateX(-0.002);
 
     //this.renderer.clear();  //
     if (debug){
@@ -860,7 +865,7 @@ function Controller(viewArea) {
 
   // ADDING GEOMETRY TO THE SCENE
   view.addSpaceFrame();
-  //view.addRock();
+  view.addRock();
 
 
   view.render();

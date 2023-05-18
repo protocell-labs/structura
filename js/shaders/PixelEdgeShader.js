@@ -74,7 +74,7 @@ const PixelEdgeShader = {
 			vec2 texel = vec2( 1.0 / resolution.x, 1.0 / resolution.y );
 
 			vec2 uv = gl_FragCoord.xy;
-			vec3 noiseColors = vec3(blugausnoise(uv)* 0.5 + 0.5);
+			vec3 noiseColors = vec3(blugausnoise(uv));
 
 			//get the image
 			vec4 color = texture2D(tDiffuse, vUv);
