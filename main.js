@@ -107,7 +107,7 @@ let noiseIter = Math.random() * (9 - 5) + 5;
 //COLORS
 //const palette = [0x5da6fb,0xfc1859,0x995dff,0x3c5e85,0x77a0d0,0x8c70ba,0xa8415e,0xce935b,0xdbbb6f,0x69995d]
 const palette = [0xff0000,0xffff00,0xff00ff,0x0000ff,0x00ff00,0x00ffff,0xffffff,0x000000]
-const palette3 = [`0.36, 0.65, 0.98`,`0.22,0.0,0.599`,`0.62,0.0,0.35`, `1.0,0.0,0.33`, `1.0,0.33,0.0`, `1.0,0.74,0.0`,`1.0,1.0,1.0`,`0.0,0.0,0.0`];
+const palette3 = [`0.36, 0.65, 0.98`,`0.22,0.0,0.599`,`0.62,0.0,0.35`, `1.0,0.0,0.33`, `1.0,0.33,0.0`, `1.0,0.74,0.0`,`1.0,1.0,1.0`];
 function col3() {
   let idx = Math.floor(Math.random()*palette3.length);
   return palette3[idx];
