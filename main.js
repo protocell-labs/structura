@@ -34,16 +34,16 @@ var global_rot_x = 0; // global rotation of the model around the X axis, -Math.P
 var global_rot_y = 0; // global rotation of the model around the Y axis, Math.PI/16, 0
 
 // SPACE FRAME
-var total_frame_size_x = 9; // doesn't work smaller than 8 with "hall", 6, 12, 10
+var total_frame_size_x = 10; // doesn't work smaller than 8 with "hall", 6, 12, 10
 var total_frame_size_y = 10; // with "hall", even numbers work best, 9, 18, 23, 15
 var frame_cell_w = 30; // 50, 25, 25, 35
 var frame_cell_h = 45; // 100, 50, 35, 50
 var frame_cell_d = 30; // 50, 25, 25, 100, 30
 var composition_type = "narthex"; // "wall", "hall", "nave", "narthex"
-var narthex_type = "only edges"; // "full", "only edges", "only middle"
+var narthex_type = "full"; // "full", "only edges", "only middle"
 var lower_sides_missing = [false, false, false, false]; // removes frame parts from the lower sides, [front, right, back, left]
-var strip_size_x = 2; // applied only with "narthex_2" and "narthex_3"
-var nr_of_stripes = 2; // applied only with "wall" and "nave" composition_type
+var strip_size_x = 3; // applied only with "narthex_2" and "narthex_3"
+var nr_of_stripes = 1; // applied only with "wall" and "nave" composition_type
 var gap_w = 25; // applied when stripes are used
 
 // LINKS
@@ -75,10 +75,10 @@ var cladding_w = 3; // slat width
 var cladding_thickness = 1; // slat depth
 var cladding_panel_prob = 1.0; // probability that a cladding panel appears, 0.9
 var cladding_degradation = 0.0; // probability for missing cladding slats, 0.1
-var cladding_upper = true; // turn on caldding for the upper grid
-var cladding_lower = false; // turn on caldding for the lower grid
-var cladding_left = true; // turn on caldding for the left side
-var cladding_right = true; // turn on caldding for the right side
+var cladding_upper = false; // turn on caldding for the upper grid
+var cladding_lower = true; // turn on caldding for the lower grid
+var cladding_left = false; // turn on caldding for the left side
+var cladding_right = false; // turn on caldding for the right side
 
 // NOISE - affects node displacement
 var noise_shift_x = gene_range(-100, 100);
@@ -205,6 +205,9 @@ if (composition_type == "wall") {
   frame_position = new THREE.Vector3(0, (frame_size_y - 1) * frame_cell_h / 2 + frame_y_offset, frame_center_offset);
 
   for (var n = 0; n < 4; n++) {
+    // early termination rules for sides
+    if (lower_sides_missing[n] == true) {continue;} // skip this side
+
     frame_dummy = new THREE.Object3D();
     frame_dummy.rotateY(n * Math.PI/2);
     frame_dummy.updateMatrix();
@@ -706,7 +709,7 @@ View.prototype.render = function () {
 
     requestAnimationFrame(this.render.bind(this));
     //this.scene.rotateY(0.002); // rotates the camera around the scene
-    this.scene.rotateX(-0.002);
+    this.scene.rotateX(-0.005);
 
     //this.renderer.clear();  //
     if (debug){
@@ -860,7 +863,7 @@ function Controller(viewArea) {
 
   // ADDING GEOMETRY TO THE SCENE
   view.addSpaceFrame();
-  //view.addRock();
+  view.addRock();
 
 
   view.render();
