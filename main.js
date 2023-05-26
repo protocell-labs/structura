@@ -32,6 +32,7 @@ var light_source_type = "south";
 // CAMERA
 var global_rot_x = 0; // global rotation of the model around the X axis, -Math.PI/16
 var global_rot_y = 0; // global rotation of the model around the Y axis, Math.PI/16, 0
+var cam_factor_mod_den = 1500;  //default = 1000
 
 // SPACE FRAME
 var total_frame_size_x = 10; // doesn't work smaller than 8 with "hall", 6, 12, 10
@@ -320,7 +321,7 @@ function View(viewArea) {
     
   
   ///SCALING
-  cam_factor_mod = cam_factor * Math.min(viewportWidth/1500, viewportHeight/1500);
+  cam_factor_mod = cam_factor * Math.min(viewportWidth/cam_factor_mod_den, viewportHeight/cam_factor_mod_den);
 
   renderer.setSize( viewportWidth, viewportHeight );
   renderer.shadowMap.enabled = true;
@@ -945,7 +946,7 @@ function viewportAdjust(vp, inner=true) {
     }
 
     ///SCALING
-    cam_factor_mod = cam_factor * Math.min((viewportWidth/1000)*quality, (viewportHeight/1000)*quality);
+    cam_factor_mod = cam_factor * Math.min((viewportWidth/cam_factor_mod_den)*quality, (viewportHeight/cam_factor_mod_den)*quality);
     
   } else {
     if (window.innerWidth/aspect_ratio>window.innerHeight) { //If target viewport height is larger then inner height
@@ -967,7 +968,7 @@ function viewportAdjust(vp, inner=true) {
     }
 
     ///SCALING
-    cam_factor_mod = cam_factor * Math.min(viewportWidth/1000, viewportHeight/1000);
+    cam_factor_mod = cam_factor * Math.min(viewportWidth/cam_factor_mod_den, viewportHeight/cam_factor_mod_den);
   }
   vp.style.marginTop=margin_top+'px';
   vp.style.marginLeft=margin_left+'px';
@@ -1116,7 +1117,7 @@ const capture = (contx) => {
   document.documentElement.scrollWidth = viewportWidth*quality;
   document.documentElement.scrollHeight = viewportHeight*quality;
   ///SCALING
-  cam_factor_mod = cam_factor * Math.min(viewportWidth*quality/1000, viewportHeight*quality/1000);
+  cam_factor_mod = cam_factor * Math.min(viewportWidth*quality/cam_factor_mod_den, viewportHeight*quality/cam_factor_mod_den);
   ///SetMargin to 0
   document.getElementById('viewport').style.marginTop=0 +'px';
   document.getElementById('viewport').style.marginLeft=0 +'px';
@@ -1140,7 +1141,7 @@ const capture = (contx) => {
   quality = 1;
 
   viewportAdjust(document.getElementById('viewport'))
-  cam_factor_mod = cam_factor * Math.min(viewportWidth*quality/1000, viewportHeight*quality/1000);
+  cam_factor_mod = cam_factor * Math.min(viewportWidth*quality/cam_factor_mod_den, viewportHeight*quality/cam_factor_mod_den);
   
   fitCameraToViewport(contx.view, viewportWidth, viewportHeight); //Projection Matrix Updated
   
