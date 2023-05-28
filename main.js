@@ -27,7 +27,7 @@ var steps = get_steps(stage);
 // OVERRIDES
 var aspect_ratio = 0.75; //// 0.5625 - 16:9 aspect ratio, 0.75 - portrait (used in O B S C V R V M)
 var explosion_type = 0; // no explosion
-var light_source_type = "south";
+var light_source_type = gene_weighted_choice(allel_light_source_type); //"south"
 
 // CAMERA
 var global_rot_x = 0; // global rotation of the model around the X axis, -Math.PI/16
@@ -88,7 +88,7 @@ var noise_shift_z = gene_range(-100, 100);
 var noise_scale_x = 0.005; // 0.005, 0.15
 var noise_scale_y = 0.005; // 0.005, 0.15
 var noise_scale_z = 0.005; // 0.005, 0.15
-var noise_factor = 5.0; // 10.0
+var noise_factor = 5.0; // 10.0, 5.0
 var noise_component_offset = 1.0; // 1.0, 1.21
 var modulate_x = true;
 var modulate_y = true;
@@ -106,18 +106,15 @@ let noiseFreq = Math.random() * (0.08 - 0.01) + 0.01;; //0.01-0.09
 let noiseIter = Math.random() * (9 - 5) + 5;
 
 //COLORS
-//const palette = [0x5da6fb,0xfc1859,0x995dff,0x3c5e85,0x77a0d0,0x8c70ba,0xa8415e,0xce935b,0xdbbb6f,0x69995d]
-const palette = [0xff0000,0xffff00,0xff00ff,0x0000ff,0x00ff00,0x00ffff,0xffffff,0x000000]
-const palette3 = [`0.36, 0.65, 0.98`,`0.22,0.0,0.599`,`0.62,0.0,0.35`, `1.0,0.0,0.33`, `1.0,0.33,0.0`, `1.0,0.74,0.0`,`1.0,1.0,1.0`];
-function col3() {
-  let idx = Math.floor(Math.random()*palette3.length);
-  return palette3[idx];
-}
-
-function randCol() {
-  let idx = Math.floor(Math.random()*palette.length);
-  return palette[idx];
-}
+var background_lightness = 0.75; // background lightness will be set to this value (in %)
+var pigments = gene_pick_key(palette_pigments); // choose pigments at random from a palette pigment list
+var palette_name = gene_pick_key(palette_pigments[pigments]); // choose palette name at random from a palette pigment list
+var palette = palette_pigments[pigments][palette_name].slice(0); // make a copy of the chosen color palette
+shuffleArray(palette); // randomly shuffle the colors in the palette - this way we can keep the order of probabilities the same in the loop below
+var temp_color_background = new THREE.Color(palette[0]);
+var color_target = new THREE.Color(); // temporary container for the background color
+temp_color_background.getHSL(color_target); // copy HSL values into color_target
+var color_background = new THREE.Color().setHSL(color_target.h, color_target.s, background_lightness);
 
 // FRAME COMPOSITION
 var frame_position, frame_dummy;
@@ -270,6 +267,15 @@ console.log( obscvrvm_logo,
             'color: white; background: #000000; font-weight: bold; font-family: "Courier New", monospace;',
             'color: white; background: #000000; font-weight: bold; font-family: "Courier New", monospace;');
 
+console.log("%cCOLOR", "color: white; background: #000000;");
+console.log("Pigments ->", pigments); // pigments are groups of color palletes
+console.log("Palette ->", palette_name); // palette is where the colors are stored (ordered is shuffled)
+console.log("Background ->\t%c    ", `color: white; background: ${palette[0]};`);
+console.log("Amorphe ->   \t%c    ", `color: white; background: ${palette[1]};`);
+console.log("Frame ->     \t%c    ", `color: white; background: ${palette[2]};`);
+console.log("Cladding ->  \t%c    ", `color: white; background: ${palette[3]};`);
+
+
 //////END CONSOLE LOG//////
 
 var pre_calc = 0.000;
@@ -349,7 +355,7 @@ function View(viewArea) {
   composer.setSize(window.innerWidth, window.innerHeight)
 
   // change scene background to solid color
-  scene.background = new THREE.Color('#cccccc'); //0xffffff, 0x000000
+  scene.background = new THREE.Color(color_background); //0xffffff, 0x000000, '#cccccc', palette[0] 
 
   const color = 0xffffff; //0xffffff
   const amb_intensity = 0.1; //0-1, zero works great for shadows with strong contrast
@@ -463,7 +469,7 @@ View.prototype.addSpaceFrame = function () {
     var dummy = new THREE.Object3D()
     var c_type = "standard";
     var geometry = new THREE.CylinderGeometry( cylinder_params[c_type][0], cylinder_params[c_type][1], cylinder_params[c_type][2], cylinder_params[c_type][3], cylinder_params[c_type][4], false ); // capped cylinder
-    var material = new THREE.MeshPhongMaterial( {color: randCol()} ); //THREE.MeshBasicMaterial( {color: 0xff0000} ); THREE.MeshNormalMaterial();
+    var material = new THREE.MeshPhongMaterial( {color: palette[2]} ); //THREE.MeshBasicMaterial( {color: 0xff0000} ); THREE.MeshNormalMaterial();
     
     // LINKS
     var imesh = new THREE.InstancedMesh( geometry, material, gData.links.length )
@@ -531,7 +537,7 @@ View.prototype.addSpaceFrame = function () {
 
     c_type = "square 1x1";
     var cladding_geometry = new THREE.CylinderGeometry( cylinder_params[c_type][0], cylinder_params[c_type][1], cylinder_params[c_type][2], cylinder_params[c_type][3], cylinder_params[c_type][4], false, Math.PI * 0.25 ); // capped cylinder
-    var cladding_material = new THREE.MeshPhongMaterial( {color: randCol(), flatShading: true} );
+    var cladding_material = new THREE.MeshPhongMaterial( {color: palette[3], flatShading: true} );
     var imesh = new THREE.InstancedMesh( cladding_geometry, cladding_material, gData.cladding.length * cladding_nr );
     var axis = new THREE.Vector3(0, 1, 0);
     imesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
@@ -678,7 +684,7 @@ View.prototype.addRock = function () {
       vec3 norm = normalize(vNormal);
       float nDotL = clamp(dot(lightDirection, norm), 0.0, 0.1);
       float strength = step(nDotL, max(abs(vUv.x - 0.5),abs(vUv.y - 0.5)));
-      vec3 col = vec3(${col3()})*vec3(noise(vPos*4.0)*0.9+0.9);
+      vec3 col = vec3(${normCol(palette[1])})*vec3(noise(vPos*4.0)*0.9+0.9);
       gl_FragColor = vec4(col/vec3(line(vUv, vec2(-1.0, 0.0), vec2(0.0,1.0))+strength*2.0), 1.0);//circle(vUv, 0.05+strength)
   }`
 
@@ -1129,10 +1135,10 @@ const capture = (contx) => {
     const urlBase64 = renderer.domElement.toDataURL('img/png'); 
     const a = document.createElement("a");
     a.href = urlBase64;
-    a.download = `VERSE_${parseInt(Math.random()*10000000)}.png`;
+    a.download = `VERSE_${palette_name.replace(/\s+/g, '')}_${parseInt(Math.random()*10000000)}.png`;
     a.click();
     URL.revokeObjectURL(urlBase64);
-  }  
+  }
   catch(e) {
     console.log("Browser does not support taking screenshot of 3d context");
     return;

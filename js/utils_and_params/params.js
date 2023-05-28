@@ -33,6 +33,13 @@ const cylinder_params = {
   "square 1x1" : [0.7, 0.7, 1, 4, 1] // first parameter is the radius, which gives us a square with a side close to 1.0
 };
 
+const allel_light_source_type = [
+  ['west', 1],
+  ['east', 1],
+  ['north', 1],
+  ['south', 1]
+];
+
 
 
 

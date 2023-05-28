@@ -83,6 +83,18 @@ function gene_weighted_choice(data){
   return data[data.length - 1][0];
 }
 
+// choose a random property name (key) from an object
+function gene_pick_key(obj) {
+	var keys = Object.keys(obj);
+	return keys[keys.length * gene() << 0];
+  }
+  
+  // choose a random property from an object
+  function gene_pick_property(obj) {
+	var keys = Object.keys(obj);
+	return obj[keys[keys.length * gene() << 0]];
+  }
+
 function calculate_size(mode, node) {
     if (mode == 0) {
       return gene() * 50 + 25
@@ -147,8 +159,21 @@ function gaussian(mean, stdev) {
   }
 }
 
+// randomize array in-place using Durstenfeld shuffle algorithm, an optimized version of Fisher-Yates
+function shuffleArray(array) {
+	for (var i = array.length - 1; i > 0; i--) {
+		var j = Math.floor(gene() * (i + 1));
+		var temp = array[i];
+		array[i] = array[j];
+		array[j] = temp;
+	}
+  }
 
-
+// normalizes color into 0.0-1.0 range for GLSL
+function normCol(rgb) {
+	let color = new THREE.Color(rgb);
+	return `${color.r}, ${color.g}, ${color.b}`;
+  }
 
 //ROCK BUILDING HELPERS
 
