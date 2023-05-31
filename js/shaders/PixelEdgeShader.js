@@ -66,7 +66,7 @@ const PixelEdgeShader = {
 			vec4 n1 = fract(p1.zywx* (p1.xxyz+ p1.yzzw));
 			vec4 n2 = fract(p2.zywx* (p2.xxyz+ p2.yzzw));
 		
-			return dot(0.5* n1- 0.125* (n0+ n2),vec4(1));
+			return dot(0.5* n1- 0.125* (n0+ n2),vec4(0.5));
 		}
 
 		void main() {
