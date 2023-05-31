@@ -86,7 +86,7 @@ const PixelEdgeShader = {
 		  
 			float threshold = sqrt(pow(dx,2.0) + pow(dy,2.0)) * 0.004;
 		  
-			if(threshold > 0.2) {
+			if(threshold > 0.6) {
 				gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
 			} else {
 			  //gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
