@@ -1,17 +1,17 @@
 /*
 
-__/\\\________/\\\____________/\\\\\\\\\\\\\\\______________/\\\\\\\\\___________________/\\\\\\\\\\\______________/\\\\\\\\\\\\\\\_        
- _\/\\\_______\/\\\___________\/\\\///////////_____________/\\\///////\\\_______________/\\\/////////\\\___________\/\\\///////////__       
-  _\//\\\______/\\\____________\/\\\_______________________\/\\\_____\/\\\______________\//\\\______\///____________\/\\\_____________      
-   __\//\\\____/\\\_____________\/\\\\\\\\\\\_______________\/\\\\\\\\\\\/________________\////\\\___________________\/\\\\\\\\\\\_____     
-    ___\//\\\__/\\\______________\/\\\///////________________\/\\\//////\\\___________________\////\\\________________\/\\\///////______    
-     ____\//\\\/\\\_______________\/\\\_______________________\/\\\____\//\\\_____________________\////\\\_____________\/\\\_____________   
-      _____\//\\\\\________________\/\\\_______________________\/\\\_____\//\\\_____________/\\\______\//\\\____________\/\\\_____________  
-       ______\//\\\_________________\/\\\\\\\\\\\\\\\___________\/\\\______\//\\\___________\///\\\\\\\\\\\/_____________\/\\\\\\\\\\\\\\\_ 
-        _______\///__________________\///////////////____________\///________\///______________\///////////_______________\///////////////__
-                                   
+_____/\\\\\\\\\\\____________________________________________________________________________________________________________________        
+ ___/\\\/////////\\\__________________________________________________________________________________________________________________       
+  __\//\\\______\///______/\\\____________________________________________________/\\\_________________________________________________      
+   ___\////\\\__________/\\\\\\\\\\\__/\\/\\\\\\\___/\\\____/\\\_____/\\\\\\\\__/\\\\\\\\\\\__/\\\____/\\\__/\\/\\\\\\\___/\\\\\\\\\____     
+    ______\////\\\______\////\\\////__\/\\\/////\\\_\/\\\___\/\\\___/\\\//////__\////\\\////__\/\\\___\/\\\_\/\\\/////\\\_\////////\\\___    
+     _________\////\\\______\/\\\______\/\\\___\///__\/\\\___\/\\\__/\\\____________\/\\\______\/\\\___\/\\\_\/\\\___\///____/\\\\\\\\\\__   
+      __/\\\______\//\\\_____\/\\\_/\\__\/\\\_________\/\\\___\/\\\_\//\\\___________\/\\\_/\\__\/\\\___\/\\\_\/\\\__________/\\\/////\\\__  
+       _\///\\\\\\\\\\\/______\//\\\\\___\/\\\_________\//\\\\\\\\\___\///\\\\\\\\____\//\\\\\___\//\\\\\\\\\__\/\\\_________\//\\\\\\\\/\\_ 
+        ___\///////////_________\/////____\///___________\/////////______\////////______\/////_____\/////////___\///___________\////////\//__       
 
-                                    V E R S E  |  { p r o t o c e l l : l a b s }  +  o f f i c e c a  |  2 0 2 3
+
+                                  S t r u c t u r a  |  { p r o t o c e l l : l a b s }  +  o f f i c e c a  |  2 0 2 3
 */
 
 
@@ -20,26 +20,17 @@ __/\\\________/\\\____________/\\\\\\\\\\\\\\\______________/\\\\\\\\\__________
 var gDatas = [];
 var gData;
 
-// WORKAROUND - to remove later
-var stage = 6;
-var steps = get_steps(stage);
 
-// OVERRIDES
-var aspect_ratio = 0.75; //// 0.5625 - 16:9 aspect ratio, 0.75 - portrait (used in O B S C V R V M)
-var explosion_type = 0; // no explosion
+
+// VIEW AND LIGHT
 var light_source_type = gene_weighted_choice(allel_light_source_type); // "north", "south", "east", "west"
+var zy_shear_f = gene() > 0.5 ? 1 : -1; // influences view angle - from above or below
 
-// CAMERA
-var global_rot_x = 0; // global rotation of the model around the X axis, -Math.PI/16
-var global_rot_y = 0; // global rotation of the model around the Y axis, Math.PI/16, 0
-var cam_factor_mod_den = 1500;  //default = 1000
-let zy_shear_f = gene() > 0.5 ? 1 : -1; // influences view angle - from above or below
 
 // SPACE FRAME
 var composition_type = gene_weighted_choice(allel_composition_type); // "detail", "wall", "hall", "crossing", "narthex"
 
-
-
+// DETAIL + WALL PARAMETERS
 if ((composition_type == "detail") || (composition_type == "wall")) {
   var obliqueAngle = gene_weighted_choice(allel_oblique_angles_wall); // rotation around Y axis of the scene
   
@@ -61,7 +52,7 @@ if ((composition_type == "detail") || (composition_type == "wall")) {
 
   var gap_w = frame_cell_w * gap_factor; // applied when stripes are used
 
-
+// HALL PARAMETERS
 } else if (composition_type == "hall") {
   var obliqueAngle = gene_weighted_choice(allel_oblique_angles_hall); // rotation around Y axis of the scene
 
@@ -95,7 +86,7 @@ if ((composition_type == "detail") || (composition_type == "wall")) {
     else if ((total_frame_size_x + total_frame_size_y > 23) && (total_frame_size_x >= 12)) {total_frame_size_x -= 4;}
   } 
 
-
+// CROSSING PARAMETERS
 } else if (composition_type == "crossing") {
   var obliqueAngle = gene_weighted_choice(allel_oblique_angles_hall); // rotation around Y axis of the scene
 
@@ -138,7 +129,7 @@ if ((composition_type == "detail") || (composition_type == "wall")) {
     else if ((total_frame_size_x + total_frame_size_y > 23 - gap_factor) && (total_frame_size_x >= 12)) {total_frame_size_x -= 4;}
   }
 
-
+// NARTHEX PARAMETERS
 } else if (composition_type == "narthex") {
   var obliqueAngle = gene_weighted_choice(allel_oblique_angles_hall); // rotation around Y axis of the scene
 
@@ -199,7 +190,6 @@ else if (detail_type == "Fuller") {var frame_links_thickness  = [1.0,  1.0,  0.5
 else if (detail_type == "van der Rohe") {var frame_links_thickness  = [2.0,  2.0,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5];} // stronger orthogonal links, very weak diagonal links
 
 frame_links_thickness = frame_links_thickness.map(function(val) {return val * Math.sqrt(frame_scale);}); // scale the frame links by the root of the frame scale
-
 var links_length_reduction = [1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00]; // no reduction of link length
 
 var alternating_cd_ef = gene() < 0.75 ? true : false; // higher chance of getting alternating patterns
@@ -234,7 +224,6 @@ var cladding_offset = 10; // distance from the space frame
 var cladding_nr = 8; // number of slats in a panel
 var cladding_w = 3 * frame_scale; // slat width
 var cladding_thickness = 1 * frame_scale; // slat depth
-
 var cladding_degradation_type = gene_weighted_choice(allel_cladding_degradation_type);
 
 if (cladding_degradation_type == "maintained") {
@@ -277,7 +266,6 @@ var noise_scale_x = 0.005; // 0.005, 0.15
 var noise_scale_y = 0.005; // 0.005, 0.15
 var noise_scale_z = 0.005; // 0.005, 0.15
 var noise_component_offset = 1.0;
-
 var deconstruction_type = gene_weighted_choice(allel_deconstruction_type);
 
 if (deconstruction_type == "minimal") {var noise_factor = 1.0;}
@@ -286,7 +274,6 @@ else if (deconstruction_type == "significant") {var noise_factor = 8.0;}
 else if (deconstruction_type == "maximal") {var noise_factor = 16.0;}
 
 var deconstruction_modulation = gene_weighted_choice(allel_deconstruction_modulation);
-
 var modulate_x = deconstruction_modulation[0];
 var modulate_y = deconstruction_modulation[1];
 var modulate_z = deconstruction_modulation[2];
@@ -455,19 +442,18 @@ if ((composition_type == "detail") || (composition_type == "wall")) {
 
 //////CONSOLE LOG//////
 
-var obscvrvm_logo =   "%c                                                                                       \n"
-                    + "%c     V E R S E  |  { p r o t o c e l l : l a b s }  +  o f f i c e c a  |  2 0 2 3     \n"
-                    + "%c                                                                                       \n";
+var structura_logo =    "%c                                                                                               \n"
+                      + "%c     S t r u c t u r a  |  { p r o t o c e l l : l a b s }  +  o f f i c e c a  |  2 0 2 3     \n"
+                      + "%c                                                                                               \n";
 
-console.log( obscvrvm_logo,
+console.log( structura_logo,
             'color: white; background: #000000; font-weight: bold; font-family: "Courier New", monospace;',
             'color: white; background: #000000; font-weight: bold; font-family: "Courier New", monospace;',
             'color: white; background: #000000; font-weight: bold; font-family: "Courier New", monospace;');
 
 console.log("%cFRAME", "color: white; background: #000000;");
 console.log("Composition ->", composition_type);
-console.log("Frame size ->", total_frame_size_x, "x", total_frame_size_y);
-console.log("Stripes -> x", nr_of_stripes);
+console.log("Size ->", total_frame_size_x, "x", total_frame_size_y);
 console.log("Details ->", detail_type);
 console.log("Cladding ->", cladding_type);
 console.log("Deconstruction ->", deconstruction_type);
@@ -536,7 +522,7 @@ function View(viewArea) {
 
   renderer.setSize( viewportWidth, viewportHeight );
   renderer.shadowMap.enabled = true;
-  renderer.domElement.id = 'obscvrvmcanvas';
+  renderer.domElement.id = 'structuracanvas';
 
   viewport.appendChild(renderer.domElement);
 
@@ -693,10 +679,6 @@ View.prototype.addSpaceFrame = function () {
       imesh.setMatrixAt(i, dummy.matrix);
     }
 
-    // global rotation of the instanced mesh
-    imesh.rotateX(global_rot_x);
-    imesh.rotateY(global_rot_y);
-
     imesh.instanceMatrix.needsUpdate = true
     //imesh.castShadow = true;
     //imesh.receiveShadow = true;
@@ -724,10 +706,6 @@ View.prototype.addSpaceFrame = function () {
       dummy.updateMatrix();
       imesh.setMatrixAt(i, dummy.matrix);
     }
-
-    // global rotation of the instanced mesh
-    imesh.rotateX(global_rot_x);
-    imesh.rotateY(global_rot_y);
 
     imesh.instanceMatrix.needsUpdate = true
     //imesh.castShadow = true;
@@ -808,10 +786,6 @@ View.prototype.addSpaceFrame = function () {
       }
 
     }
-
-    // global rotation of the instanced mesh
-    imesh.rotateX(global_rot_x);
-    imesh.rotateY(global_rot_y);
 
     imesh.instanceMatrix.needsUpdate = true
     //imesh.castShadow = true;
@@ -999,11 +973,10 @@ function Controller(viewArea) {
   const up = new THREE.Vector3(0,1,0)
 
   // LIGHT TRAVEL PARAMETERS
-  var light_framerate = 50; // 50 - obscvrvm
-  light_framerate_change = 50; // 50 - needs to be the same
+  var light_framerate = 50;
+  light_framerate_change = 50; // needs to be the same as above
   var base_light_angle = Math.PI/3; // starting angle, angle 0 is straight behind the camera
   base_light_angle_step = 0.0000; // zero makes the light not travel, before 0.0005 - obscvrvm
-  //var light_angle;
   var light_angle_step;
 
   if (light_source_type == 'west') {
@@ -1122,7 +1095,9 @@ function Controller(viewArea) {
     }
     setTimeout(function () {document.querySelector("#loading").style.display = "none";}, min_loading_time - loading_time + 2000);
   }
-  setTimeout(function () {fxpreview();}, min_loading_time+3000)
+  
+  // turn this on for fxhash projects
+  //setTimeout(function () {fxpreview();}, min_loading_time+3000);
 
   function onWindowResize() {
     //console.log("resize")
@@ -1133,7 +1108,7 @@ function Controller(viewArea) {
     window.addEventListener( 'resize', onWindowResize );
 }
 
-function obscvrvm () {
+function structura () {
   controller = new Controller('viewport');
 }
 
@@ -1210,7 +1185,7 @@ function capturer_custom_save() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `VERSE_${parseInt(Math.random()*10000000)}.gif`;
+      a.download = `Structura_${parseInt(Math.random()*10000000)}.gif`;
       a.click();
       URL.revokeObjectURL(url);
       });
@@ -1323,7 +1298,7 @@ function doc_keyUp(e) {
 }
 
 const handler = (e) => {
-    obscvrvm();
+    structura();
 };
 
 const capture = (contx) => {
@@ -1343,7 +1318,7 @@ const capture = (contx) => {
     const urlBase64 = renderer.domElement.toDataURL('img/png'); 
     const a = document.createElement("a");
     a.href = urlBase64;
-    a.download = `VERSE_${palette_name.replace(/\s+/g, '')}_${parseInt(Math.random()*10000000)}.png`;
+    a.download = `Structura_${palette_name.replace(/\s+/g, '')}_${parseInt(Math.random()*10000000)}.png`;
     a.click();
     URL.revokeObjectURL(urlBase64);
   }

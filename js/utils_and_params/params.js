@@ -2,30 +2,18 @@
 
 
 
-//////SETTINGS//////
+// SETTINGS
 var loading_start_time = new Date().getTime();
 var min_loading_time = 1000; // this is the minimum that the loading screen will be shown, in miliseconds
 var debug = true;
 var cam_factor = 4; //controls the "zoom" when using orthographic camera, default was 4
+var aspect_ratio = 0.75; //// 0.5625 - 16:9 aspect ratio, 0.75 - portrait (used in O B S C V R V M)
+var cam_factor_mod_den = 1500;
+var stage = 6; // WORKAROUND - to remove later
+var steps = get_steps(stage); // WORKAROUND - to remove later
 
 
-
-
-
-
-
-
-
-
-
-function get_steps(stage) {
-  var steps = [];
-  for (var i = 0; i < stage; i++) {
-    steps.push(Math.PI/gene_range(50, 200))
-  }
-  return steps
-}
-
+// ALLELES
 
 const cylinder_params = {
   "standard" : [0.5, 0.5, 1, 6, 1],
@@ -152,7 +140,6 @@ const allel_deconstruction_type = [
   ["maximal", 5]
 ];
 
-
 const allel_deconstruction_modulation = [
   [[true, true, true], 55],
   [[true, false, false], 10],
@@ -166,9 +153,8 @@ const allel_deconstruction_modulation = [
 
 
 
+// ANIMATION
 
-
-//////ANIMATION SETTINGS CHOOSING//////
 const light_frame_speed_param = {
   Fast: 25, // light increment per 1/100 of a second
   Normal: 50, // light increment per 1/30 of a second

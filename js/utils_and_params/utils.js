@@ -13,6 +13,13 @@ function iOS() {
   || (navigator.userAgent.includes("Mac") && "ontouchend" in document)
 }
 
+function get_steps(stage) {
+	var steps = [];
+	for (var i = 0; i < stage; i++) {
+		steps.push(Math.PI/gene_range(50, 200))
+	}
+	return steps
+}
 
 function getKeyByValue(obj, value) {
   return Object.keys(obj).find(key => obj[key] === value);
@@ -22,7 +29,6 @@ function findNextValueByValue(value, obj) {
   var keys = Object.keys(obj);
   return obj[keys[(keys.indexOf(getKeyByValue(obj, value)) + 1) % keys.length]];
 }
-
 
 function memcpy(src, srcOffset, dst, dstOffset, length) {
     var i
@@ -44,7 +50,7 @@ function memcpy(src, srcOffset, dst, dstOffset, length) {
     }
 
     return dst
-  }
+}
 
 
 //FXHASH random function for specific implimentation
