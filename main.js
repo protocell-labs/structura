@@ -27,59 +27,247 @@ var steps = get_steps(stage);
 // OVERRIDES
 var aspect_ratio = 0.75; //// 0.5625 - 16:9 aspect ratio, 0.75 - portrait (used in O B S C V R V M)
 var explosion_type = 0; // no explosion
-var light_source_type = gene_weighted_choice(allel_light_source_type); //"south"
+var light_source_type = gene_weighted_choice(allel_light_source_type); // "north", "south", "east", "west"
 
 // CAMERA
 var global_rot_x = 0; // global rotation of the model around the X axis, -Math.PI/16
 var global_rot_y = 0; // global rotation of the model around the Y axis, Math.PI/16, 0
 var cam_factor_mod_den = 1500;  //default = 1000
+let zy_shear_f = gene() > 0.5 ? 1 : -1; // influences view angle - from above or below
 
 // SPACE FRAME
-var total_frame_size_x = 10; // doesn't work smaller than 8 with "hall", 6, 12, 10
-var total_frame_size_y = 10; // with "hall", even numbers work best, 9, 18, 23, 15
-var frame_cell_w = 30; // 50, 25, 25, 35
-var frame_cell_h = 45; // 100, 50, 35, 50
-var frame_cell_d = 30; // 50, 25, 25, 100, 30
-var composition_type = "narthex"; // "wall", "hall", "nave", "narthex"
-var narthex_type = "full"; // "full", "only edges", "only middle"
-var lower_sides_missing = [false, false, false, false]; // removes frame parts from the lower sides, [front, right, back, left]
-var strip_size_x = 3; // applied only with "narthex_2" and "narthex_3"
-var nr_of_stripes = 1; // applied only with "wall" and "nave" composition_type
-var gap_w = 25; // applied when stripes are used
+var composition_type = gene_weighted_choice(allel_composition_type); // "detail", "wall", "hall", "crossing", "narthex"
+
+
+
+if ((composition_type == "detail") || (composition_type == "wall")) {
+  var obliqueAngle = gene_weighted_choice(allel_oblique_angles_wall); // rotation around Y axis of the scene
+  
+  var nr_of_stripes = gene_weighted_choice(allel_stripes_wall); // applied only with "detail", "wall" and "crossing" composition_type
+  var strip_size_x = 3; // applied only with "narthex" composition_type
+  var frame_scale = composition_type == "wall" ? 1.0 : 2.0; // general scale for the frame
+
+  var frame_cell_w = 30 * frame_scale;
+  var frame_cell_h = 45 * frame_scale;
+  var frame_cell_d = 30 * frame_scale;
+
+  var total_frame_size_x = generateRandomInt(4 + nr_of_stripes, 10) * 2 / frame_scale;
+  var max_size_y = obliqueAngle == 0 ? 10 : 8; // if the scene is rotated, the frame height is smaller
+  var total_frame_size_y = generateRandomInt(6, max_size_y) * 2 / frame_scale;
+
+  if (nr_of_stripes == 4) {var gap_factor = 1 / frame_scale;} // for four stripes - fixed gap
+  else if (nr_of_stripes == 3) {var gap_factor = gene() < 0.5 ? 0 : 0.5;} // for three stripes - smaller gaps
+  else {var gap_factor = gene_weighted_choice(allel_gap_w_factor);} // for one or two stripes - larger gaps
+
+  var gap_w = frame_cell_w * gap_factor; // applied when stripes are used
+
+
+} else if (composition_type == "hall") {
+  var obliqueAngle = gene_weighted_choice(allel_oblique_angles_hall); // rotation around Y axis of the scene
+
+  var nr_of_stripes = 1; // applied only with "detail", "wall" and "crossing" composition_type
+  var strip_size_x = 3; // applied only with "narthex" composition_type
+  var frame_scale = 1.0; // general scale for the frame
+  
+  var frame_cell_w = 30;
+  var frame_cell_h = 45;
+  var frame_cell_d = 30;
+  var gap_w = frame_cell_w;
+
+  // setting frame size for different oblique angles
+  if (obliqueAngle == 0) {
+    var total_frame_size_x = generateRandomInt(4, 9) * 2; // doesn't work smaller than 8 with "hall", 6, 12, 10
+    var max_size_y = total_frame_size_x > 13 ? 5 : 8;
+    var total_frame_size_y = generateRandomInt(2, max_size_y) * 2; // with "hall", even numbers work best, 9, 18, 23, 15
+     
+    if ((gene() < 0.5) && (total_frame_size_y >= 8)) {[total_frame_size_x, total_frame_size_y] = [total_frame_size_y, total_frame_size_x];} // chance that x size and y size swap values
+  
+  } else if ((Math.abs(obliqueAngle) == Math.PI/8) || (Math.abs(obliqueAngle) == Math.PI/4)) {
+    var total_frame_size_x = generateRandomInt(4, 8) * 2; // doesn't work smaller than 8 with "hall", 6, 12, 10
+    var max_size_y = total_frame_size_x > 13 ? 5 : 8;
+    var total_frame_size_y = generateRandomInt(2, max_size_y) * 2; // with "hall", even numbers work best, 9, 18, 23, 15
+     
+    if ((gene() < 0.5) && (total_frame_size_y >= 8)) {[total_frame_size_x, total_frame_size_y] = [total_frame_size_y, total_frame_size_x];} // chance that x size and y size swap values
+    
+    // reduce the x or y size if both dimensions are too large
+    if ((total_frame_size_x + total_frame_size_y > 23) && (total_frame_size_x == 8)) {total_frame_size_y -= 2;}
+    else if ((total_frame_size_x + total_frame_size_y > 23) && (total_frame_size_x == 10)) {total_frame_size_x -= 2;}
+    else if ((total_frame_size_x + total_frame_size_y > 23) && (total_frame_size_x >= 12)) {total_frame_size_x -= 4;}
+  } 
+
+
+} else if (composition_type == "crossing") {
+  var obliqueAngle = gene_weighted_choice(allel_oblique_angles_hall); // rotation around Y axis of the scene
+
+  var nr_of_stripes = gene_weighted_choice(allel_stripes_crossing); // applied only with "detail", "wall" and "crossing" composition_type
+  var strip_size_x = 3; // applied only with "narthex" composition_type
+  var lower_sides_missing = gene_weighted_choice(allel_lower_sides_missing); // removes frame parts from the lower sides, [front, right, back, left]
+  var frame_scale = 1.0; // general scale for the frame
+  
+  var frame_cell_w = 30;
+  var frame_cell_h = 45;
+  var frame_cell_d = 30;
+
+  var gap_factor = gene() < 0.65 ? 1 : 2;
+  var gap_w = frame_cell_w * gap_factor; // applied when stripes are used
+  
+  // setting frame size for different oblique angles
+  if (obliqueAngle == 0) {
+    var total_frame_size_x = generateRandomInt(4, 9) * 2; // doesn't work smaller than 8 with "hall", 6, 12, 10
+    var max_size_y = total_frame_size_x > 13 ? 5 : 8;
+    var total_frame_size_y = generateRandomInt(2, max_size_y) * 2; // with "hall", even numbers work best, 9, 18, 23, 15
+     
+    if ((gene() < 0.5) && (total_frame_size_y >= 8)) {[total_frame_size_x, total_frame_size_y] = [total_frame_size_y, total_frame_size_x];} // chance that x size and y size swap values
+  
+    // reduce the x or y size if both dimensions are too large
+    if ((total_frame_size_x + total_frame_size_y > 23) && (total_frame_size_x == 8)) {total_frame_size_y -= 2;}
+    else if ((total_frame_size_x + total_frame_size_y > 23) && (total_frame_size_x == 10)) {total_frame_size_x -= 2;}
+    else if ((total_frame_size_x + total_frame_size_y > 23) && (total_frame_size_x >= 12)) {total_frame_size_x -= 4;}
+
+
+  } else if ((Math.abs(obliqueAngle) == Math.PI/8) || (Math.abs(obliqueAngle) == Math.PI/4)) {
+    var total_frame_size_x = generateRandomInt(4, 9 - gap_factor) * 2; // doesn't work smaller than 8 with "hall", 6, 12, 10
+    var max_size_y = total_frame_size_x > 13 ? 5 : 8 - gap_factor;
+    var total_frame_size_y = generateRandomInt(2, max_size_y) * 2; // with "hall", even numbers work best, 9, 18, 23, 15
+     
+    if ((gene() < 0.5) && (total_frame_size_y >= 8)) {[total_frame_size_x, total_frame_size_y] = [total_frame_size_y, total_frame_size_x];} // chance that x size and y size swap values
+    
+    // reduce the x or y size if both dimensions are too large
+    if ((total_frame_size_x + total_frame_size_y > 23 - gap_factor) && (total_frame_size_x == 8)) {total_frame_size_y -= 2;}
+    else if ((total_frame_size_x + total_frame_size_y > 23 - gap_factor) && (total_frame_size_x == 10)) {total_frame_size_x -= 2;}
+    else if ((total_frame_size_x + total_frame_size_y > 23 - gap_factor) && (total_frame_size_x >= 12)) {total_frame_size_x -= 4;}
+  }
+
+
+} else if (composition_type == "narthex") {
+  var obliqueAngle = gene_weighted_choice(allel_oblique_angles_hall); // rotation around Y axis of the scene
+
+  var nr_of_stripes = 1; // NOT USED HERE - applied only with "detail", "wall" and "crossing" composition_type
+  var narthex_type = gene_weighted_choice(allel_narthex_type); // "full", "only edges", "only middle"
+  var strip_size_x = gene() < 0.5 ? 2 : 3; // applied only with "narthex" composition_type
+  if (narthex_type == "only middle") {strip_size_x = strip_size_x * 2;} // "only middle" has thicker stripe
+
+  var lower_sides_missing = gene_weighted_choice(allel_lower_sides_missing); // removes frame parts from the lower sides, [front, right, back, left]
+  var frame_scale = 1.0; // general scale for the frame
+
+  var frame_cell_w = 30;
+  var frame_cell_h = 45;
+  var frame_cell_d = 30;
+  var gap_w = frame_cell_w;
+
+  var odd_toggle = strip_size_x % 2 == 1 ? 0 : 1; // 0 is strip_size_x is odd, 1 if strip_size_x is even
+
+  // setting frame size for different oblique angles
+  if (obliqueAngle == 0) {
+    var total_frame_size_x = generateRandomInt(4, 8) * 2 + odd_toggle; // doesn't work smaller than 8 with "hall", 6, 12, 10
+    var max_size_y = total_frame_size_x > 13 ? 6 : 8;
+    var total_frame_size_y = generateRandomInt(4, max_size_y) * 2 + odd_toggle; // with "hall", even numbers work best, 9, 18, 23, 15
+     
+    if ((gene() < 0.5) && (total_frame_size_y >= 8)) {[total_frame_size_x, total_frame_size_y] = [total_frame_size_y, total_frame_size_x];} // chance that x size and y size swap values
+  
+    // reduce the x or y size if both dimensions are too large
+    if (total_frame_size_x + total_frame_size_y > 25) {total_frame_size_y -= 2; total_frame_size_x -= 2;}
+    else if ((total_frame_size_x + total_frame_size_y > 23) && (total_frame_size_x == 8 + odd_toggle)) {total_frame_size_y -= 2;}
+    else if ((total_frame_size_x + total_frame_size_y > 23) && (total_frame_size_x >= 10 + odd_toggle)) {total_frame_size_x -= 2;}
+    
+
+  } else if ((Math.abs(obliqueAngle) == Math.PI/8) || (Math.abs(obliqueAngle) == Math.PI/4)) {
+    var total_frame_size_x = generateRandomInt(4, 7) * 2 + odd_toggle; // doesn't work smaller than 8 with "hall", 6, 12, 10
+    var max_size_y = total_frame_size_x > 11 ? 6 : 7;
+    var total_frame_size_y = generateRandomInt(4, max_size_y) * 2 + odd_toggle; // with "hall", even numbers work best, 9, 18, 23, 15
+     
+    if ((gene() < 0.5) && (total_frame_size_y >= 8)) {[total_frame_size_x, total_frame_size_y] = [total_frame_size_y, total_frame_size_x];} // chance that x size and y size swap values
+  
+    // reduce the x or y size if both dimensions are too large
+    if (total_frame_size_x + total_frame_size_y > 25) {total_frame_size_y -= 2; total_frame_size_x -= 2;}
+    else if ((total_frame_size_x + total_frame_size_y > 21) && (total_frame_size_x == 8 + odd_toggle)) {total_frame_size_y -= 2;}
+    else if ((total_frame_size_x + total_frame_size_y > 21) && (total_frame_size_x >= 10 + odd_toggle)) {total_frame_size_x -= 2;}
+  }
+
+}
+
+
 
 // LINKS
+var detail_type = gene_weighted_choice(allel_detail_type); // "Wachsmann", "Fuller", "van der Rohe"
+
 //                           [vert, hor,  a,    b,    c,    d,    e,    f,    g_u,  h_u,  g_l,  h_l]
 var frame_links_visibility = [true, true, true, true, true, true, true, true, true, true, true, true];
-var frame_links_thickness  = [2.5,  2.5,  1.0,  1.0,  0.5,  0.5,  0.5,  0.5,  1.0,  1.0,  1.0,  1.0];
-var links_length_reduction = [1.00, 0.85, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90];
-var alternating_cd_ef = true;
-var alternating_gu_hu = true;
-var alternating_gu_hu_pattern = 1; // options: 1, 2, 3, 4, 5 - visible only if alternating_gu_hu_pattern = true
-var alternating_gl_hl = true;
-var alternating_gl_hl_pattern = 1; // options: 1, 2, 3, 4, 5 - visible only if alternating_gl_hl_pattern = true
+
+if (detail_type == "Wachsmann" ) {var frame_links_thickness  = [2.0,  2.0,  1.0,  1.0,  0.5,  0.5,  0.5,  0.5,  1.0,  1.0,  1.0,  1.0];} // stronger orthogonal links
+else if (detail_type == "Fuller") {var frame_links_thickness  = [1.0,  1.0,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  1.0,  1.0,  1.0,  1.0];} // stronger diagonal links
+else if (detail_type == "van der Rohe") {var frame_links_thickness  = [2.0,  2.0,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5];} // stronger orthogonal links, very weak diagonal links
+
+frame_links_thickness = frame_links_thickness.map(function(val) {return val * Math.sqrt(frame_scale);}); // scale the frame links by the root of the frame scale
+
+var links_length_reduction = [1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00]; // no reduction of link length
+
+var alternating_cd_ef = gene() < 0.75 ? true : false; // higher chance of getting alternating patterns
+var alternating_gu_hu = gene() < 0.75 ? true : false; // higher chance of getting alternating patterns
+var alternating_gl_hl = gene() < 0.75 ? true : false; // higher chance of getting alternating patterns
+var alternating_gu_hu_pattern = gene_weighted_choice(allel_alternating_cross_link_pattern); // options: 1, 2, 3, 4, 5 - visible only if alternating_gu_hu_pattern = true
+var alternating_gl_hl_pattern = alternating_gu_hu_pattern; // options: 1, 2, 3, 4, 5 - visible only if alternating_gl_hl_pattern = true
+
 var cutoff_vert_links = frame_cell_h * 2.0; // length at which the link will not be displayed anymore
 var cutoff_hor_links = frame_cell_w * 2.0; // length at which the link will not be displayed anymore
 var cutoff_cdef_links = frame_cell_h * 2.0; // length at which the link will not be displayed anymore
 var cutoff_gh_links = frame_cell_h * 2.0; // length at which the link will not be displayed anymore
 
 // JOINTS
-var joint_visibility = true; // joint at vertical links
+var joint_visibility = detail_type == "van der Rohe" ? false : true; // joint at vertical links, always true unless detail type is "van der Rohe"
 var joint_length = frame_links_thickness[0]; // joint at vertical links
-var joint_thickness_f = frame_links_thickness[0] * 2; // joint at vertical links, 3
-var tightener_length_reduction = 0.1; // detail in the middle of cross-links c, d, e, f, g, h
-var tightener_thickness_f = 1.5; // detail in the middle of cross-links c, d, e, f, g, h
+
+if (detail_type == "Wachsmann") {var joint_thickness_f = frame_links_thickness[0] * 2;} // joint at vertical links
+else if (detail_type == "Fuller") {var joint_thickness_f = frame_links_thickness[0] * 4;} // joint at vertical links
+else {var joint_thickness_f = frame_links_thickness[0] * 2;} // other detail types have no joints anyways
+
+if (detail_type == "Fuller") {
+  var tightener_length_reduction = 0.8; // detail in the middle of cross-links c, d, e, f, g, h
+  var tightener_thickness_f = 2.0; // detail in the middle of cross-links c, d, e, f, g, h
+} else {
+  var tightener_length_reduction = 0.1; // detail in the middle of cross-links c, d, e, f, g, h
+  var tightener_thickness_f = 2.0; // detail in the middle of cross-links c, d, e, f, g, h
+}
 
 // CLADDING
 var cladding_offset = 10; // distance from the space frame
 var cladding_nr = 8; // number of slats in a panel
-var cladding_w = 3; // slat width
-var cladding_thickness = 1; // slat depth
-var cladding_panel_prob = 1.0; // probability that a cladding panel appears, 0.9
-var cladding_degradation = 0.0; // probability for missing cladding slats, 0.1
-var cladding_upper = false; // turn on caldding for the upper grid
-var cladding_lower = true; // turn on caldding for the lower grid
-var cladding_left = false; // turn on caldding for the left side
-var cladding_right = false; // turn on caldding for the right side
+var cladding_w = 3 * frame_scale; // slat width
+var cladding_thickness = 1 * frame_scale; // slat depth
+
+var cladding_degradation_type = gene_weighted_choice(allel_cladding_degradation_type);
+
+if (cladding_degradation_type == "maintained") {
+  var cladding_panel_prob = 1.0; // probability that a cladding panel appears
+  var cladding_degradation = 0.0; // probability for missing cladding slats
+} else if (cladding_degradation_type == "weathered") {
+  var cladding_panel_prob = 1.0; // probability that a cladding panel appears
+  var cladding_degradation = 0.1; // probability for missing cladding slats
+} else if (cladding_degradation_type == "damaged") {
+  var cladding_panel_prob = 0.85; // probability that a cladding panel appears
+  var cladding_degradation = 0.15; // probability for missing cladding slats
+} else if (cladding_degradation_type == "ruined") {
+  var cladding_panel_prob = 0.35; // probability that a cladding panel appears
+  var cladding_degradation = 0.2; // probability for missing cladding slats
+}
+
+var cladding_type = cladding_degradation_type; // this term will be printed in the console under Cladding ->
+
+if ((composition_type == "detail") || (composition_type == "wall")) {var cladding_placement = gene_weighted_choice(allel_cladding_placement_wall);}
+else if (composition_type == "narthex") {var cladding_placement = gene_weighted_choice(allel_cladding_placement_narthex);}
+else {var cladding_placement = gene_weighted_choice(allel_cladding_placement_hall);} // "hall", "crossing" have the same rules for cladding
+
+if (strip_size_x < 3) {cladding_placement[1] = false;} // with "narthex" and strip_size_x = 2 we cannot have inner / lower cladding
+
+var cladding_upper = cladding_placement[0]; // turn on caldding for the upper grid
+var cladding_lower = cladding_placement[1]; // turn on caldding for the lower grid
+var cladding_left = cladding_placement[2]; // turn on caldding for the left side
+var cladding_right = cladding_placement[3]; // turn on caldding for the right side
+
+// if all clading positions are false, change 
+if ((cladding_upper == false) && (cladding_lower == false) && (cladding_left == false) && (cladding_right == false)) {
+  cladding_type = "none";
+}
 
 // NOISE - affects node displacement
 var noise_shift_x = gene_range(-100, 100);
@@ -88,14 +276,20 @@ var noise_shift_z = gene_range(-100, 100);
 var noise_scale_x = 0.005; // 0.005, 0.15
 var noise_scale_y = 0.005; // 0.005, 0.15
 var noise_scale_z = 0.005; // 0.005, 0.15
-var noise_factor = 5.0; // 10.0, 5.0
-var noise_component_offset = 1.0; // 1.0, 1.21
-var modulate_x = true;
-var modulate_y = true;
-var modulate_z = true;
+var noise_component_offset = 1.0;
 
-//ROTATE PARAMS
-let obliqueAngle = Math.random() > 0.5 ? Math.PI/4 : 0;
+var deconstruction_type = gene_weighted_choice(allel_deconstruction_type);
+
+if (deconstruction_type == "minimal") {var noise_factor = 1.0;}
+else if (deconstruction_type == "moderate") {var noise_factor = 4.0;} 
+else if (deconstruction_type == "significant") {var noise_factor = 8.0;}
+else if (deconstruction_type == "maximal") {var noise_factor = 16.0;}
+
+var deconstruction_modulation = gene_weighted_choice(allel_deconstruction_modulation);
+
+var modulate_x = deconstruction_modulation[0];
+var modulate_y = deconstruction_modulation[1];
+var modulate_z = deconstruction_modulation[2];
 
 //ROCK PARAMS
 let booleanEdge = Math.random() * (20 - 5) + 1; //1-20
@@ -120,7 +314,7 @@ var color_background = new THREE.Color().setHSL(color_target.h, color_target.s, 
 var frame_position, frame_dummy;
 var frame_size_x, frame_size_y;
 
-if (composition_type == "wall") {
+if ((composition_type == "detail") || (composition_type == "wall")) {
 
   frame_size_x = Math.floor(total_frame_size_x / nr_of_stripes) + 1;
   frame_size_y = total_frame_size_y;
@@ -181,7 +375,7 @@ if (composition_type == "wall") {
     gDatas.push(gData);
   }
 
-} else if (composition_type == "nave") {
+} else if (composition_type == "crossing") {
 
   frame_size_x = Math.floor(total_frame_size_x / nr_of_stripes) + 1;
   frame_size_y = total_frame_size_y;
@@ -191,6 +385,9 @@ if (composition_type == "wall") {
   var x_placement;
 
   for (var n = 0; n < 4; n++) {
+    // early termination rules for sides
+    if (lower_sides_missing[n] == true) {continue;} // skip this side
+
     for (var i = 0; i < nr_of_stripes; i++) {
 
       if (nr_of_stripes == 1) {x_placement = 0;}
@@ -267,6 +464,14 @@ console.log( obscvrvm_logo,
             'color: white; background: #000000; font-weight: bold; font-family: "Courier New", monospace;',
             'color: white; background: #000000; font-weight: bold; font-family: "Courier New", monospace;');
 
+console.log("%cFRAME", "color: white; background: #000000;");
+console.log("Composition ->", composition_type);
+console.log("Frame size ->", total_frame_size_x, "x", total_frame_size_y);
+console.log("Stripes -> x", nr_of_stripes);
+console.log("Details ->", detail_type);
+console.log("Cladding ->", cladding_type);
+console.log("Deconstruction ->", deconstruction_type);
+
 console.log("%cCOLOR", "color: white; background: #000000;");
 console.log("Pigments ->", pigments); // pigments are groups of color palletes
 console.log("Palette ->", palette_name); // palette is where the colors are stored (ordered is shuffled)
@@ -339,7 +544,7 @@ function View(viewArea) {
   
   //oblique transform
   scene.matrixAutoUpdate = false;
-  scene.matrix.makeShear(0, 0, 0, 0, 0, -1);
+  scene.matrix.makeShear(0, 0, 0, 0, 0, zy_shear_f);
   scene.updateMatrixWorld(true);
 
   //var camera = new THREE.PerspectiveCamera( 75, viewportWidth / viewportHeight, 0.1, 10000 );
@@ -500,7 +705,11 @@ View.prototype.addSpaceFrame = function () {
 
 
     // JOINTS
-    var imesh = new THREE.InstancedMesh( geometry, material, gData.joints.length )
+    if (detail_type == "Wachsmann" ) {var joint_geometry = new THREE.CylinderGeometry( cylinder_params[c_type][0], cylinder_params[c_type][1], cylinder_params[c_type][2], cylinder_params[c_type][3], cylinder_params[c_type][4], false );} // capped cylinder
+    else if (detail_type == "Fuller" ) {var joint_geometry = new THREE.SphereGeometry( cylinder_params[c_type][0], 6, 4 );}
+    else {var joint_geometry = new THREE.CylinderGeometry( cylinder_params[c_type][0], cylinder_params[c_type][1], cylinder_params[c_type][2], cylinder_params[c_type][3], cylinder_params[c_type][4], false );} // in any other case, capped cylinder
+
+    var imesh = new THREE.InstancedMesh( joint_geometry, material, gData.joints.length )
     var axis = new THREE.Vector3(0, 1, 0);
     imesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
 
@@ -830,7 +1039,6 @@ function Controller(viewArea) {
   }
  
   var lightIntervalInstance = setInterval(function () {update_light_position()}, light_framerate);
-
 
   setTimeout(function ()  {
     setInterval(function () {
