@@ -279,12 +279,14 @@ var modulate_y = deconstruction_modulation[1];
 var modulate_z = deconstruction_modulation[2];
 
 //ROCK PARAMS
-let booleanEdge = Math.random() * (20 - 5) + 1; //1-20
-let booleanTotal = Math.random() * (18 - 8) + 10;//10-20
+let booleanEdge = gene_range(5, 20);
+let booleanTotal = gene_range(8, 18);
 
 let noise = openSimplexNoise(Date.now());
-let noiseFreq = Math.random() * (0.08 - 0.01) + 0.01;; //0.01-0.09
-let noiseIter = Math.random() * (9 - 5) + 5;
+let noiseFreq = gene_range(0.01, 0.09);
+let noiseIter = gene_range(5, 9);
+
+let voxOffset = [0, 2][Math.floor(gene_range(0,2))];
 
 //COLORS
 var background_lightness = 0.75; // background lightness will be set to this value (in %)
@@ -465,6 +467,7 @@ console.log("Background ->\t%c    ", `color: white; background: ${palette[0]};`)
 console.log("Amorphe ->   \t%c    ", `color: white; background: ${palette[1]};`);
 console.log("Frame ->     \t%c    ", `color: white; background: ${palette[2]};`);
 console.log("Cladding ->  \t%c    ", `color: white; background: ${palette[3]};`);
+console.log(voxOffset);
 
 
 //////END CONSOLE LOG//////
@@ -897,7 +900,7 @@ View.prototype.addRock = function () {
       for(let k = 0; k < 100; k++ ) {
         let idx = (j * 100 + i) * 100 + k;
 
-        let p = [i-50, j-50, k-50];
+        let p = [i-50+voxOffset*gene_range(-1,1), j-50+voxOffset*gene_range(-1,1), k-50+voxOffset*gene_range(-1,1)];
         let d = sdf(p, rands);
         if (d < -0.01) {
           let voxPos = new THREE.Vector3(p[0]*voxelSize, p[1]*voxelSize, p[2]*voxelSize);
