@@ -1,7 +1,6 @@
 <head>
   <style> body { margin: 0; } </style>
   <script src="js/unpkg/three.js"></script>
-  <script src="js/unpkg/p5.min.js"></script>
   <script src="js/unpkg/perlin.min.js"></script>
   <script src="js/postprocessing/EffectComposer.js"></script>
   <script src="js/postprocessing/RenderPass.js"></script>
@@ -65,14 +64,14 @@
 
   <!-- LOADING SCREEN -->
   <div id="loading">
-      <div id="p5loader"></div>
       <div id="loading_background"></div>
+      <img src="loader/Structura_Marble_frame_12x2_5fps_v02.gif" class="spinner" style="display: block;">
       <div id="loading_overlay"></div>
       <span id="loading_text" style="font-weight: bold;">
         S t r u c t u r a
       </span>
       <span id="loading_text" style="font-size: 10px; transform: translate(-50%, 110px);">
-        { p r o t o c e l l : l a b s } + o f f i c e&nbsp;&nbsp;c a<br><br>
+        o f f i c e&nbsp;&nbsp;c a&nbsp;&nbsp;+&nbsp;&nbsp;{ p r o t o c e l l : l a b s }<br><br>
         2 0 2 3
       </span>
   </div>
@@ -91,7 +90,7 @@
           <li><b>i</b>  : i n f o</li>
           <li><b>1 - 5</b>  : i m a g e&nbsp;&nbsp;c a p t u r e&nbsp;&nbsp;1 - 5 x</li><br><br>
           <li>S t r u c t u r a</li>
-          <li>{ p r o t o c e l l : l a b s } + o f f i c e&nbsp;&nbsp;c a</li>
+          <li>o f f i c e&nbsp;&nbsp;c a&nbsp;&nbsp;+&nbsp;&nbsp;{ p r o t o c e l l : l a b s }</li>
           <li>2 0 2 3</li>
         </ul>
       </span>
@@ -117,7 +116,6 @@
   <script src="js/utils_and_params/utils.js"></script>
   <script src="js/utils_and_params/params.js"></script>
   <script src="js/utils_and_params/palettes.js"></script>
-  <script src="js/utils_and_params/loading.js"></script>
   <script defer="defer" src="main.js"></script>
 
 </body>

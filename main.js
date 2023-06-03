@@ -11,7 +11,7 @@ _____/\\\\\\\\\\\_______________________________________________________________
         ___\///////////_________\/////____\///___________\/////////______\////////______\/////_____\/////////___\///___________\////////\//__       
 
 
-                                  S t r u c t u r a  |  { p r o t o c e l l : l a b s }  +  o f f i c e c a  |  2 0 2 3
+                                  S t r u c t u r a  |  o f f i c e  c a  +  { p r o t o c e l l : l a b s }  |  2 0 2 3
 */
 
 
@@ -445,7 +445,7 @@ if ((composition_type == "detail") || (composition_type == "wall")) {
 //////CONSOLE LOG//////
 
 var structura_logo =    "%c                                                                                               \n"
-                      + "%c     S t r u c t u r a  |  { p r o t o c e l l : l a b s }  +  o f f i c e c a  |  2 0 2 3     \n"
+                      + "%c     S t r u c t u r a  |  o f f i c e  c a  +  { p r o t o c e l l : l a b s }  |  2 0 2 3     \n"
                       + "%c                                                                                               \n";
 
 console.log( structura_logo,
