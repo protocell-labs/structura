@@ -1,8 +1,8 @@
 //////PARAMS//////
 
 
-
 // SETTINGS
+
 var loading_start_time = new Date().getTime();
 var min_loading_time = 1000; // this is the minimum that the loading screen will be shown, in miliseconds
 var debug = true;
@@ -149,7 +149,6 @@ const allel_deconstruction_modulation = [
   [[true, false, true], 5],
   [[false, true, true], 5]
 ];
-
 
 
 

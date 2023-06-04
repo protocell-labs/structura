@@ -21,14 +21,16 @@ var gDatas = [];
 var gData;
 
 
-
 // VIEW AND LIGHT
+
 var light_source_type = gene_weighted_choice(allel_light_source_type); // "north", "south", "east", "west"
 var zy_shear_f = gene() > 0.5 ? 1 : -1; // influences view angle - from above or below
 
 
 // SPACE FRAME
+
 var composition_type = gene_weighted_choice(allel_composition_type); // "detail", "wall", "hall", "crossing", "narthex"
+
 
 // DETAIL + WALL PARAMETERS
 if ((composition_type == "detail") || (composition_type == "wall")) {
@@ -178,8 +180,8 @@ if ((composition_type == "detail") || (composition_type == "wall")) {
 }
 
 
-
 // LINKS
+
 var detail_type = gene_weighted_choice(allel_detail_type); // "Wachsmann", "Fuller", "van der Rohe"
 
 //                           [vert, hor,  a,    b,    c,    d,    e,    f,    g_u,  h_u,  g_l,  h_l]
@@ -192,18 +194,22 @@ else if (detail_type == "van der Rohe") {var frame_links_thickness  = [2.0,  2.0
 frame_links_thickness = frame_links_thickness.map(function(val) {return val * Math.sqrt(frame_scale);}); // scale the frame links by the root of the frame scale
 var links_length_reduction = [1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00]; // no reduction of link length
 
-var alternating_cd_ef = gene() < 0.75 ? true : false; // higher chance of getting alternating patterns
-var alternating_gu_hu = gene() < 0.75 ? true : false; // higher chance of getting alternating patterns
-var alternating_gl_hl = gene() < 0.75 ? true : false; // higher chance of getting alternating patterns
+// higher chance of getting alternating patterns
+var alternating_cd_ef = gene() < 0.75 ? true : false; 
+var alternating_gu_hu = gene() < 0.75 ? true : false;
+var alternating_gl_hl = gene() < 0.75 ? true : false;
 var alternating_gu_hu_pattern = gene_weighted_choice(allel_alternating_cross_link_pattern); // options: 1, 2, 3, 4, 5 - visible only if alternating_gu_hu_pattern = true
 var alternating_gl_hl_pattern = alternating_gu_hu_pattern; // options: 1, 2, 3, 4, 5 - visible only if alternating_gl_hl_pattern = true
 
-var cutoff_vert_links = frame_cell_h * 2.0; // length at which the link will not be displayed anymore
-var cutoff_hor_links = frame_cell_w * 2.0; // length at which the link will not be displayed anymore
-var cutoff_cdef_links = frame_cell_h * 2.0; // length at which the link will not be displayed anymore
-var cutoff_gh_links = frame_cell_h * 2.0; // length at which the link will not be displayed anymore
+// length at which the link will not be displayed anymore
+var cutoff_vert_links = frame_cell_h * 2.0; 
+var cutoff_hor_links = frame_cell_w * 2.0;
+var cutoff_cdef_links = frame_cell_h * 2.0;
+var cutoff_gh_links = frame_cell_h * 2.0;
+
 
 // JOINTS
+
 var joint_visibility = detail_type == "van der Rohe" ? false : true; // joint at vertical links, always true unless detail type is "van der Rohe"
 var joint_length = frame_links_thickness[0]; // joint at vertical links
 
@@ -219,7 +225,9 @@ if (detail_type == "Fuller") {
   var tightener_thickness_f = 2.0; // detail in the middle of cross-links c, d, e, f, g, h
 }
 
+
 // CLADDING
+
 var cladding_offset = 10; // distance from the space frame
 var cladding_nr = 8; // number of slats in a panel
 var cladding_w = 3 * frame_scale; // slat width
@@ -253,18 +261,20 @@ var cladding_lower = cladding_placement[1]; // turn on caldding for the lower gr
 var cladding_left = cladding_placement[2]; // turn on caldding for the left side
 var cladding_right = cladding_placement[3]; // turn on caldding for the right side
 
-// if all clading positions are false, change 
+// if all clading positions are false, change cladding_type to "none"
 if ((cladding_upper == false) && (cladding_lower == false) && (cladding_left == false) && (cladding_right == false)) {
   cladding_type = "none";
 }
 
+
 // NOISE - affects node displacement
+
 var noise_shift_x = gene_range(-100, 100);
 var noise_shift_y = gene_range(-100, 100);
 var noise_shift_z = gene_range(-100, 100);
-var noise_scale_x = 0.005; // 0.005, 0.15
-var noise_scale_y = 0.005; // 0.005, 0.15
-var noise_scale_z = 0.005; // 0.005, 0.15
+var noise_scale_x = 0.005;
+var noise_scale_y = 0.005;
+var noise_scale_z = 0.005;
 var noise_component_offset = 1.0;
 var deconstruction_type = gene_weighted_choice(allel_deconstruction_type);
 
@@ -274,11 +284,13 @@ else if (deconstruction_type == "significant") {var noise_factor = 8.0;}
 else if (deconstruction_type == "maximal") {var noise_factor = 16.0;}
 
 var deconstruction_modulation = gene_weighted_choice(allel_deconstruction_modulation);
-var modulate_x = deconstruction_modulation[0];
-var modulate_y = deconstruction_modulation[1];
-var modulate_z = deconstruction_modulation[2];
+var modulate_x = deconstruction_modulation[0]; // if noise is applied in x direction
+var modulate_y = deconstruction_modulation[1]; // if noise is applied in y direction
+var modulate_z = deconstruction_modulation[2]; // if noise is applied in z direction
+
 
 //ROCK PARAMS
+
 let booleanEdge = gene_range(5, 20);
 let booleanTotal = gene_range(8, 18);
 
@@ -288,7 +300,9 @@ let noiseIter = gene_range(5, 9);
 
 let voxOffset = [0, 2][Math.floor(gene_range(0,2))];
 
+
 //COLORS
+
 var background_lightness = 0.75; // background lightness will be set to this value (in %)
 var pigments = gene_pick_key(palette_pigments); // choose pigments at random from a palette pigment list
 var palette_name = gene_pick_key(palette_pigments[pigments]); // choose palette name at random from a palette pigment list
@@ -299,7 +313,9 @@ var color_target = new THREE.Color(); // temporary container for the background 
 temp_color_background.getHSL(color_target); // copy HSL values into color_target
 var color_background = new THREE.Color().setHSL(color_target.h, color_target.s, background_lightness);
 
+
 // FRAME COMPOSITION
+
 var frame_position, frame_dummy;
 var frame_size_x, frame_size_y;
 
@@ -467,7 +483,6 @@ console.log("Background ->\t%c    ", `color: white; background: ${palette[0]};`)
 console.log("Amorphe ->   \t%c    ", `color: white; background: ${palette[1]};`);
 console.log("Frame ->     \t%c    ", `color: white; background: ${palette[2]};`);
 console.log("Cladding ->  \t%c    ", `color: white; background: ${palette[3]};`);
-console.log(voxOffset);
 
 
 //////END CONSOLE LOG//////
@@ -484,16 +499,14 @@ var margin_top = 0;
 var viewportHeight;
 var viewportWidth;
 
-
 var light_framerate_change;
 var base_light_angle_step;
 var light_angle;
 var background_toggle = false;
-
 var controller;
 
 var renderer = new THREE.WebGLRenderer({antialias: false, alpha: true, preserveDrawingBuffer: true}); //antialias: true
-const composer = new THREE.EffectComposer( renderer );
+const composer = new THREE.EffectComposer(renderer);
 let snap = false;
 let quality = 0;
 var capturer = null;
@@ -521,6 +534,7 @@ function View(viewArea) {
     
   
   ///SCALING
+
   cam_factor_mod = cam_factor * Math.min(viewportWidth/cam_factor_mod_den, viewportHeight/cam_factor_mod_den);
 
   renderer.setSize( viewportWidth, viewportHeight );
@@ -536,70 +550,31 @@ function View(viewArea) {
   scene.matrix.makeShear(0, 0, 0, 0, 0, zy_shear_f);
   scene.updateMatrixWorld(true);
 
-  //var camera = new THREE.PerspectiveCamera( 75, viewportWidth / viewportHeight, 0.1, 10000 );
-  //camera.position.set(0,0, 100);
-
-
   //cam_factor controls the "zoom" when using orthographic camera
   var camera = new THREE.OrthographicCamera( -viewportWidth/cam_factor_mod, viewportWidth/cam_factor_mod, viewportHeight/cam_factor_mod, -viewportHeight/cam_factor_mod, 0, 5000 );
   camera.position.set(0, 0, 2000);
   camera.lookAt(new THREE.Vector3(0, 0, 0));
 
-  //composer = new THREE.EffectComposer( renderer );
   composer.setSize(window.innerWidth, window.innerHeight)
 
   // change scene background to solid color
-  scene.background = new THREE.Color(color_background); //0xffffff, 0x000000, '#cccccc', palette[0] 
+  scene.background = new THREE.Color(color_background);
 
-  const color = 0xffffff; //0xffffff
+  const light_color = 0xffffff;
   const amb_intensity = 0.1; //0-1, zero works great for shadows with strong contrast
 
   // ADD LIGHTING
   var light = new THREE.PointLight(0xffffff);
-  light.position.set(0, 0, 2000); //1000,1000,1000
+  light.position.set(0, 0, 2000);
  
   light.castShadow = true;
   light.shadow.camera.near = 200;
   light.shadow.camera.far = 2000;
   light.shadow.bias = - 0.000222;
 
-  var shadow = 2048; //Default
-  var paramsAssigned = false;
-  // URL PARAMS
-  // Usage: add this to the url ?shadow=4096
-  try {
-    const queryString = window.location.search;
-    const urlParams = new URLSearchParams(queryString);
-    const shadowString = urlParams.get('shadow');
-    
-  if (shadowString!=null) {
-      shadow = Math.abs(parseInt(shadowString));
-      paramsAssigned = true;
-    }
-  } catch (error) {
-    //console.log("shadow variable must be a positive integer")
-  }
-  if (Number.isInteger(shadow) & paramsAssigned) { //If values are overiden by urlParams  for a minimum overide add: & shadow > 2048
-    console.log("Using custom url parmater for shadow map size: " + shadow.toString())
-    light.shadow.mapSize.width = shadow;
-    light.shadow.mapSize.height = shadow;   
-  } else if (Number.isInteger(shadow) & iOS()) {
-    //console.log("iOS")
-    light.shadow.mapSize.width = Math.min(shadow, 2048); //increase for better quality of shadow, standard is 2048
-    light.shadow.mapSize.height = Math.min(shadow, 2048); 
-  } else if ((Number.isInteger(shadow) & !iOS())){
-    //console.log("!iOS")
-    light.shadow.mapSize.width = Math.max(shadow, 4096);
-    light.shadow.mapSize.height = Math.max(shadow, 4096);
-  } else {
-    //console.log("Using default shadow map.")
-    light.shadow.mapSize.width = 4096; 
-    light.shadow.mapSize.height = 4096; 
-  }
-
   scene.add(light);
 
-  const amblight = new THREE.AmbientLight(color, amb_intensity);
+  const amblight = new THREE.AmbientLight(light_color, amb_intensity);
   scene.add(amblight);
 
   this.winHeight = viewportHeight;
@@ -619,32 +594,7 @@ function View(viewArea) {
 
   // Renders the Scene
   const renderPass = new THREE.RenderPass(this.scene, this.camera);
-  this.composer.addPass( renderPass );
-
-  // FXAA antialiasing
-  const effectFXAA = new THREE.ShaderPass( THREE.FXAAShader );
-  effectFXAA.uniforms[ 'resolution' ].value.x = 1 / ( window.innerWidth * window.devicePixelRatio );
-  effectFXAA.uniforms[ 'resolution' ].value.y = 1 / ( window.innerHeight * window.devicePixelRatio );
-  //this.composer.addPass( effectFXAA );
-
-  //Bloom
-  const bloomPass = new THREE.UnrealBloomPass();
-  bloomPass.strength = 0.30;
-  bloomPass.radius = 0.0;
-  bloomPass.threshold = 0.0;
-  //this.composer.addPass(bloomPass)
-
-  //Colour to Grayscale 
-  //const effectGrayScale = new THREE.ShaderPass( THREE.LuminosityHighPassShader);
-  //this.composer.addPass(effectGrayScale)
-
-  //Gaussian Blur Filter to improve sobel operator?
-
-  //Sobel operator
-  const effectSobel = new THREE.ShaderPass( THREE.SobelOperatorShader);
-  effectSobel.uniforms['resolution'].value.x = window.innerWidth * window.devicePixelRatio * 4.0; // increased the resolution of the texture to get finer edge detection
-  effectSobel.uniforms['resolution'].value.y = window.innerHeight * window.devicePixelRatio * 4.0; // same as above
-  //this.composer.addPass(effectSobel);
+  this.composer.addPass(renderPass);
 
   //Pixel edge shader
   const effectPixelEdge = new THREE.ShaderPass( THREE.PixelEdgeShader);
@@ -683,8 +633,6 @@ View.prototype.addSpaceFrame = function () {
     }
 
     imesh.instanceMatrix.needsUpdate = true
-    //imesh.castShadow = true;
-    //imesh.receiveShadow = true;
     imesh.rotateY(obliqueAngle);
     this.scene.add(imesh);
 
@@ -711,8 +659,6 @@ View.prototype.addSpaceFrame = function () {
     }
 
     imesh.instanceMatrix.needsUpdate = true
-    //imesh.castShadow = true;
-    //imesh.receiveShadow = true;
     imesh.rotateY(obliqueAngle);
     this.scene.add(imesh);
 
@@ -791,8 +737,6 @@ View.prototype.addSpaceFrame = function () {
     }
 
     imesh.instanceMatrix.needsUpdate = true
-    //imesh.castShadow = true;
-    //imesh.receiveShadow = true;
     imesh.rotateY(obliqueAngle);
     this.scene.add(imesh);
 
@@ -891,7 +835,7 @@ View.prototype.addRock = function () {
   //array of random values for boolean locations
   let rands = [];
   for (let i = 0; i < 150; i++) {
-    rands.push(map(Math.random(), 0, 1, -50, 50)*1);
+    rands.push(map(gene(), 0, 1, -50, 50)*1);
   }
 
   //draw voxels
@@ -920,13 +864,13 @@ View.prototype.addRock = function () {
 View.prototype.render = function () {
 
     this.composer.render();
-    //this.renderer.clear();  //
+    //this.renderer.clear();
 
     requestAnimationFrame(this.render.bind(this));
     //this.scene.rotateY(0.002); // rotates the camera around the scene
     //this.scene.rotateX(-0.002);
 
-    //this.renderer.clear();  //
+    //this.renderer.clear();
     if (debug){
       var start_timer = new Date().getTime();
     }
@@ -979,7 +923,7 @@ function Controller(viewArea) {
   var light_framerate = 50;
   light_framerate_change = 50; // needs to be the same as above
   var base_light_angle = Math.PI/3; // starting angle, angle 0 is straight behind the camera
-  base_light_angle_step = 0.0000; // zero makes the light not travel, before 0.0005 - obscvrvm
+  base_light_angle_step = 0.0005; // zero makes the light not travel, before 0.0005 - obscvrvm
   var light_angle_step;
 
   if (light_source_type == 'west') {
@@ -1010,8 +954,6 @@ function Controller(viewArea) {
     // rotation in YZ plane
     view.light.position.set(lp.x, Math.sin(light_angle)*parallex_amplitude, Math.cos(light_angle)*parallex_amplitude);
     }
-    // rotation in XZ plane
-    //view.light.position.set(Math.sin(light_angle)*parallex_amplitude, Math.cos(light_angle)*parallex_amplitude, lp.z);
   }
  
   var lightIntervalInstance = setInterval(function () {update_light_position()}, light_framerate);
@@ -1075,9 +1017,9 @@ function Controller(viewArea) {
 
 
   // ADDING GEOMETRY TO THE SCENE
+
   view.addSpaceFrame();
   view.addRock();
-
 
   view.render();
 
@@ -1117,7 +1059,8 @@ function structura () {
 
 
 function viewportAdjust(vp, inner=true) {
-  ///ADJUST SIZE AND MARGIN
+  /// ADJUST SIZE AND MARGIN
+
   if (inner) {
     if (window.innerWidth/aspect_ratio>window.innerHeight) { //If target viewport height is larger then inner height
 
@@ -1133,11 +1076,10 @@ function viewportAdjust(vp, inner=true) {
   
       margin_top = (window.innerHeight - viewportHeight)/2;
       margin_left = 0;
-
-
     }
 
-    ///SCALING
+    /// SCALING
+
     cam_factor_mod = cam_factor * Math.min((viewportWidth/cam_factor_mod_den)*quality, (viewportHeight/cam_factor_mod_den)*quality);
     
   } else {
@@ -1156,10 +1098,10 @@ function viewportAdjust(vp, inner=true) {
   
       margin_top = (window.innerHeight - viewportHeight)/2;
       margin_left = 0;
-
     }
 
-    ///SCALING
+    /// SCALING
+
     cam_factor_mod = cam_factor * Math.min(viewportWidth/cam_factor_mod_den, viewportHeight/cam_factor_mod_den);
   }
   vp.style.marginTop=margin_top+'px';
@@ -1168,9 +1110,8 @@ function viewportAdjust(vp, inner=true) {
 }
 
 function fitCameraToViewport(view_instance, w,h, adjust=true) {
-  view_instance.renderer.setSize( w, h);
-  view_instance.composer.setSize( w, h);
-  //view_instance.camera.aspect = w / h;
+  view_instance.renderer.setSize(w, h);
+  view_instance.composer.setSize(w, h);
   if (adjust) {
     view_instance.camera.left = -w / cam_factor_mod;
     view_instance.camera.right = w / cam_factor_mod;
@@ -1188,19 +1129,18 @@ function capturer_custom_save() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Structura_${parseInt(Math.random()*10000000)}.gif`;
+      a.download = `Structura_${palette_name.replace(/\s+/g, '')}_${parseInt(Math.random()*10000000)}.gif`;
       a.click();
       URL.revokeObjectURL(url);
       });
       setTimeout(() => {
-        capturer = null; //Set capturer back to null after download
+        capturer = null; // set capturer back to null after download
       }, 250);
     }, 0);
 }
 
 function check_drawing_buffer(q) {
   const max_side = 5500; // looks like the max buffer for Chrome on desktop is 5760, so we take a bit lower to be safe
-  //console.log(window.devicePixelRatio)
   var taget_size = q*Math.max(viewportWidth, viewportHeight);
   if (taget_size > max_side) {
     var reduced_quality = q*max_side/taget_size;
@@ -1305,12 +1245,12 @@ const handler = (e) => {
 };
 
 const capture = (contx) => {
-  ///DOCSIZE
+  /// DOCSIZE
   document.documentElement.scrollWidth = viewportWidth*quality;
   document.documentElement.scrollHeight = viewportHeight*quality;
-  ///SCALING
+  /// SCALING
   cam_factor_mod = cam_factor * Math.min(viewportWidth*quality/cam_factor_mod_den, viewportHeight*quality/cam_factor_mod_den);
-  ///SetMargin to 0
+  /// SetMargin to 0
   document.getElementById('viewport').style.marginTop=0 +'px';
   document.getElementById('viewport').style.marginLeft=0 +'px';
   fitCameraToViewport(contx.view, viewportWidth*quality, viewportHeight*quality, true); //Projection Matrix Updated here
@@ -1346,6 +1286,3 @@ document.addEventListener('keyup', doc_keyUp, false);
 document.addEventListener('DOMContentLoaded', () => {
   handler();
 });
-
-
-

@@ -83,12 +83,13 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
+  width: 100%;
   transform: translate(-50%, -50%);
   text-align: center;
 }
 
 #keybinding_text li{
-  margin: 10px 0;
+  margin: 10px 0; /*margin: 10px 0;*/
 }
 
 /*FOR A FIXED WIDTH*/
