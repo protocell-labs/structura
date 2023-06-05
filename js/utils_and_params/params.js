@@ -13,6 +13,7 @@ var stage = 6; // WORKAROUND - to remove later
 var steps = get_steps(stage); // WORKAROUND - to remove later
 var gif_frames = 8;
 var captured_frames = 0;
+var this_scene = null;
 
 
 // ALLELES
@@ -170,4 +171,12 @@ const light_step_size_param = {
   Small: 0.0005,
   Medium: 0.0010,
   Large: 0.0015
+}
+
+
+const gif_step_param = {
+  8: 8,
+  16: 16,
+  32: 32,
+  64: 64
 }

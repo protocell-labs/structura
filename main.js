@@ -550,6 +550,9 @@ function View(viewArea) {
   scene.matrix.makeShear(0, 0, 0, 0, 0, zy_shear_f);
   scene.updateMatrixWorld(true);
 
+  //globalise scene to be accessible later.
+  this_scene = scene;
+
   //cam_factor controls the "zoom" when using orthographic camera
   var camera = new THREE.OrthographicCamera( -viewportWidth/cam_factor_mod, viewportWidth/cam_factor_mod, viewportHeight/cam_factor_mod, -viewportHeight/cam_factor_mod, 0, 5000 );
   camera.position.set(0, 0, 2000);
@@ -893,9 +896,8 @@ View.prototype.render = function () {
       snap = false;
     }
     if(recording) {
-      this.scene.rotateY(2*Math.PI/gif_frames);  //Math.PI/4
-  
       // On each transform change:
+      this.scene.rotateY(2*Math.PI/gif_frames);  //Math.PI/4
       var rotScaleTranslation = new THREE.Matrix4();
       rotScaleTranslation.compose( this.scene.position, this.scene.quaternion, this.scene.scale );
       this.scene.updateMatrix();
@@ -904,7 +906,7 @@ View.prototype.render = function () {
       capturer.capture( renderer.domElement );
       captured_frames++;
     }
-    if (recording & (captured_frames == gif_frames-1)) {
+    if (recording & (captured_frames == gif_frames)) {
       recording = !recording;
       capturer.stop();
       capturer_custom_save();
@@ -1192,6 +1194,10 @@ function doc_keyUp(e) {
   } else if (e.keyCode === 53 || e.keyCode === 101) { // 5 or NumPad 5
     snap = true;
     quality = check_drawing_buffer(5);
+    
+  } else if (e.keyCode === 78 ) { // n number of gif frames
+    gif_frames = findNextValueByValue(gif_frames, gif_step_param)
+    console.log("gif frames per revolution changed to: " + getKeyByValue(gif_step_param, gif_frames))
   } else if (e.keyCode === 71 ) {  //"g" = Gif
     recording = !recording;
     if(recording){
@@ -1201,7 +1207,7 @@ function doc_keyUp(e) {
         display: false,
         //quality: 99,
         //name: variant_name,
-        framerate:0.5, // gif_framerate
+        framerate:8, // gif_framerate
         //autoSaveTime:, //does not work for gif
         //timeLimit: 4000,
         format: 'gif',
@@ -1226,9 +1232,16 @@ function doc_keyUp(e) {
   } else if (e.keyCode === 84 ) {  //"t" = increase travel speed
     base_light_angle_step = findNextValueByValue(base_light_angle_step, light_step_size_param)
     console.log("light angle step changed to: " + getKeyByValue(light_step_size_param, base_light_angle_step))
-  } else if (e.keyCode === 65 ) {  //"a" = jump light angle by 30 degrees
+  } else if (e.keyCode === 76 ) {  //"l" = jump light angle by 30 degrees
     light_angle += Math.PI/6; //advance light angle by 30deg
     console.log("Skipped 30degrees")
+  } else if (e.keyCode === 65 ) { //"a" = jump angle by one step 
+    this_scene.rotateY(2*Math.PI/gif_frames);  
+    var rotScaleTranslation = new THREE.Matrix4();
+    rotScaleTranslation.compose( this_scene.position, this_scene.quaternion, this_scene.scale );
+    this_scene.updateMatrix();
+    this_scene.matrix.makeShear(0, 0, 0, 0, 0, zy_shear_f).multiply( rotScaleTranslation )
+    this_scene.updateMatrixWorld(true);
   } else if (e.keyCode === 66 ) {  //"b" = flip background from black to white
     background_toggle = !background_toggle;
     if (background_toggle) {
