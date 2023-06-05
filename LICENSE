@@ -1,6 +1,7 @@
 MIT License
 
-Copyright (c) 2022 Kane Borg and Luka Piskorec
+Copyright (c) 2023 office ca & {protocell:labs}
+(Kane Borg, Galo Canizares, Stephanie Sang Delgado and Luka Piskorec)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,23 +24,26 @@ SOFTWARE.
 
 Attribution of dependencies
 
-Largest code contribution of authors is generative creation of geometry, their
-dynamic transformation and behavior.
-Available from: https://github.com/lukapiskorec/protocelllabs/obscvrvm
+Largest code contribution of authors is generative creation of geometry and shaders.
+Available from: https://github.com/protocell-labs/structura
 This code is provided under MIT License.
-Copyright (c) 2022 Kane Borg and Luka Piskorec
+Copyright (c) 2023 office ca & {protocell:labs}
 
 This code uses three.js library for rendering 3D geometry.
 Downloaded from: https://github.com/mrdoob/three.js
 This code is provided under MIT License.
-Copyright (c) 2010-2022 three.js authors.
+Copyright (c) 2010-2023 three.js authors.
 
 CCapture.js is used for capturing animation clips in GIF format.
 Downloaded from: https://github.com/spite/ccapture.js
 This code is provided under MIT License.
 Copyright (c) 2012 Jaume Sanchez Elias
 
-Perlin noise implementation from Leonardo de S.L.F
+Perlin noise implementation from Leonardo de S.L.F.
 Downloaded from: https://github.com/leodeslf/perlin-noise
 This code is provided under MIT License.
-Copyright (c) 2022 Leonardo de S.L.F
+Copyright (c) 2023 Leonardo de S.L.F
+
+Simplex noise implementation from Mark Spronck.
+Downloaded from: https://github.com/blindman67/SimplexNoiseJS
+This code is in the public domain.
