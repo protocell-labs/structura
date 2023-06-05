@@ -863,14 +863,22 @@ View.prototype.addRock = function () {
 
 View.prototype.render = function () {
 
+
     this.composer.render();
     //this.renderer.clear();
-
+    
     requestAnimationFrame(this.render.bind(this));
-    //this.scene.rotateY(0.002); // rotates the camera around the scene
-    //this.scene.rotateX(-0.002);
 
-    //this.renderer.clear();
+    // On each transform change:
+    /*
+    this.scene.rotateY(Math.PI/4);  //Math.PI/4
+    var rotScaleTranslation = new THREE.Matrix4();
+    rotScaleTranslation.compose( this.scene.position, this.scene.quaternion, this.scene.scale );
+    this.scene.updateMatrix();
+    this.scene.matrix.makeShear(0, 0, 0, 0, 0, zy_shear_f).multiply( rotScaleTranslation )
+    this.scene.updateMatrixWorld(true);*/
+
+
     if (debug){
       var start_timer = new Date().getTime();
     }
@@ -885,7 +893,22 @@ View.prototype.render = function () {
       snap = false;
     }
     if(recording) {
+      this.scene.rotateY(2*Math.PI/gif_frames);  //Math.PI/4
+  
+      // On each transform change:
+      var rotScaleTranslation = new THREE.Matrix4();
+      rotScaleTranslation.compose( this.scene.position, this.scene.quaternion, this.scene.scale );
+      this.scene.updateMatrix();
+      this.scene.matrix.makeShear(0, 0, 0, 0, 0, zy_shear_f).multiply( rotScaleTranslation )
+      this.scene.updateMatrixWorld(true);
       capturer.capture( renderer.domElement );
+      captured_frames++;
+    }
+    if (recording & (captured_frames == gif_frames-1)) {
+      recording = !recording;
+      capturer.stop();
+      capturer_custom_save();
+      captured_frames = 0;
     }
     //this.renderer.render(this.scene, this.camera); // When no layers are used
 
@@ -1020,7 +1043,6 @@ function Controller(viewArea) {
 
   view.addSpaceFrame();
   view.addRock();
-
   view.render();
 
 
@@ -1179,24 +1201,24 @@ function doc_keyUp(e) {
         display: false,
         //quality: 99,
         //name: variant_name,
-        //framerate:,
+        framerate:0.5, // gif_framerate
         //autoSaveTime:, //does not work for gif
-        //timeLimit: 10000,
+        //timeLimit: 4000,
         format: 'gif',
         workersPath: 'js/capture/src/'
       } );
       capturer.start();
-      setTimeout(() => {
+      /*setTimeout(() => {
         if (capturer != null) {
           capturer.stop();
           capturer_custom_save();
         }
-      },5000)
+      },4000)*/ //If capturer is not stopped manually save after 4 sectonds
     }
     else if (capturer != null) { //If capturer in ongoing and button press the "g" button again
       capturer.stop();
       capturer_custom_save();
-
+      captured_frames = 0;
     }
   } else if (e.keyCode === 70 ) {  //"f" = increment light travel framerate
     light_framerate_change = findNextValueByValue(light_framerate_change, light_frame_speed_param)

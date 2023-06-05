@@ -11,6 +11,8 @@ var aspect_ratio = 0.75; //// 0.5625 - 16:9 aspect ratio, 0.75 - portrait (used 
 var cam_factor_mod_den = 1500;
 var stage = 6; // WORKAROUND - to remove later
 var steps = get_steps(stage); // WORKAROUND - to remove later
+var gif_frames = 8;
+var captured_frames = 0;
 
 
 // ALLELES
