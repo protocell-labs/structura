@@ -136,7 +136,6 @@ function createCircleTexture(color, size) {
   return texture;
 }
 
-
 // returns a gaussian random function with the given mean and standard deviation (normal distribution has a mean of 0 and the standard deviation of 1)
 function gaussian(mean, stdev) {
   var y2;
@@ -163,6 +162,16 @@ function gaussian(mean, stdev) {
       return retval;
     return -retval;
   }
+}
+
+// convert degrees to radians
+function degToRad(degrees) {
+	return degrees * (Math.PI / 180);
+}
+
+// convert radians to degrees
+function radToDeg(rad) {
+	return rad / (Math.PI / 180);
 }
 
 // randomize array in-place using Durstenfeld shuffle algorithm, an optimized version of Fisher-Yates

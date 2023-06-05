@@ -1153,7 +1153,7 @@ function capturer_custom_save() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Structura_${palette_name.replace(/\s+/g, '')}_${parseInt(Math.random()*10000000)}.gif`;
+      a.download = `Structura_${palette_name.replace(/\s+/g, '')}_${Math.floor(viewportWidth)}x${Math.floor(viewportHeight)}pix_${gif_frames}frames_${parseInt(Math.random()*10000000)}.gif`; // ${gif_frames}frames
       a.click();
       URL.revokeObjectURL(url);
       });
@@ -1196,8 +1196,8 @@ function doc_keyUp(e) {
     quality = check_drawing_buffer(5);
     
   } else if (e.keyCode === 78 ) { // n number of gif frames
-    gif_frames = findNextValueByValue(gif_frames, gif_step_param)
-    console.log("gif frames per revolution changed to: " + getKeyByValue(gif_step_param, gif_frames))
+    gif_frames = findNextValueByValue(gif_frames, gif_step_param);
+    console.log("gif frames per revolution changed to: " + getKeyByValue(gif_step_param, gif_frames) + "\nrotation angle changed to: " + Math.round(radToDeg(2*Math.PI/gif_frames)) + " deg");
   } else if (e.keyCode === 71 ) {  //"g" = Gif
     recording = !recording;
     if(recording){
@@ -1205,9 +1205,9 @@ function doc_keyUp(e) {
       capturer = new CCapture( {
         verbose: false,
         display: false,
-        //quality: 99,
+        quality: 99,
         //name: variant_name,
-        framerate:8, // gif_framerate
+        framerate: 10, // gif_framerate
         //autoSaveTime:, //does not work for gif
         //timeLimit: 4000,
         format: 'gif',
@@ -1227,14 +1227,14 @@ function doc_keyUp(e) {
       captured_frames = 0;
     }
   } else if (e.keyCode === 70 ) {  //"f" = increment light travel framerate
-    light_framerate_change = findNextValueByValue(light_framerate_change, light_frame_speed_param)
-    console.log("light framerate changed to: " + getKeyByValue(light_frame_speed_param, light_framerate_change))
+    light_framerate_change = findNextValueByValue(light_framerate_change, light_frame_speed_param);
+    console.log("light framerate changed to: " + getKeyByValue(light_frame_speed_param, light_framerate_change));
   } else if (e.keyCode === 84 ) {  //"t" = increase travel speed
     base_light_angle_step = findNextValueByValue(base_light_angle_step, light_step_size_param)
-    console.log("light angle step changed to: " + getKeyByValue(light_step_size_param, base_light_angle_step))
+    console.log("light angle step changed to: " + getKeyByValue(light_step_size_param, base_light_angle_step));
   } else if (e.keyCode === 76 ) {  //"l" = jump light angle by 30 degrees
-    light_angle += Math.PI/6; //advance light angle by 30deg
-    console.log("Skipped 30degrees")
+    light_angle += Math.PI/6; //advance light angle by 30 deg
+    console.log("light rotated 30 degrees");
   } else if (e.keyCode === 65 ) { //"a" = jump angle by one step 
     this_scene.rotateY(2*Math.PI/gif_frames);  
     var rotScaleTranslation = new THREE.Matrix4();
@@ -1246,10 +1246,10 @@ function doc_keyUp(e) {
     background_toggle = !background_toggle;
     if (background_toggle) {
       document.body.style.backgroundColor = "black";
-      console.log("Background: black")
+      console.log("page background set to black");
     } else {
       document.body.style.backgroundColor = "white";
-      console.log("Background: white")
+      console.log("page background set to white");
     }
     
   } 

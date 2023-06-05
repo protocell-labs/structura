@@ -173,7 +173,6 @@ const light_step_size_param = {
   Large: 0.0015
 }
 
-
 const gif_step_param = {
   8: 8,
   16: 16,

@@ -80,7 +80,6 @@ const palette_pigments = {
   "murex, rhodochrosite, marshmallow": {
   
   "Minsky":      ["#c5e5f5", "#fd5d9d", "#fccce0", "#feefef"], // - Marvin Minsky
-  "Newell":      ["#8d00d8", "#d722b7", "#f9c66c", "#e2e2e2"], // - Allen Newell
   "Simon":       ["#1f336f", "#8b3b7b", "#f7447f", "#f9f0df"], // - Herbert A. Simon
   "McCarthy":    ["#3fb3aa", "#7cc7ac", "#dadaaa", "#fe9e9e", "#ff3f7f"], // - John McCarthy
   "Solomonoff":  ["#e77e99", "#6cc6dd", "#866686", "#f9f9f0"], // light pink, light blue, light purple, white - Ray Solomonoff
