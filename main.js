@@ -289,7 +289,7 @@ var modulate_y = deconstruction_modulation[1]; // if noise is applied in y direc
 var modulate_z = deconstruction_modulation[2]; // if noise is applied in z direction
 
 
-//ROCK PARAMS
+// ROCK PARAMS
 
 let booleanEdge = gene_range(5, 20);
 let booleanTotal = gene_range(8, 18);
@@ -301,7 +301,7 @@ let noiseIter = gene_range(5, 9);
 let voxOffset = [0, 2][Math.floor(gene_range(0,2))];
 
 
-//COLORS
+// COLORS
 
 var background_lightness = 0.75; // background lightness will be set to this value (in %)
 var pigments = gene_pick_key(palette_pigments); // choose pigments at random from a palette pigment list
@@ -461,7 +461,7 @@ if ((composition_type == "detail") || (composition_type == "wall")) {
 }
 
 
-//////CONSOLE LOG//////
+// CONSOLE LOG
 
 var structura_logo =    "%c                                                                                               \n"
                       + "%c     S t r u c t u r a  |  o f f i c e  c a  +  { p r o t o c e l l : l a b s }  |  2 0 2 3     \n"
@@ -487,14 +487,28 @@ console.log("Amorphe ->   \t%c    ", `color: white; background: #${color_amorphe
 console.log("Frame ->     \t%c    ", `color: white; background: #${color_frame.getHexString()};`);
 console.log("Cladding ->  \t%c    ", `color: white; background: #${color_cladding.getHexString()};`);
 
-//////END CONSOLE LOG//////
 
+// TOKEN FEATURES
+
+window.$verseFeatures = {
+  Composition : composition_type,
+  Size : total_frame_size_x.toString() + " x " + total_frame_size_y.toString(),
+  Details : detail_type,
+  Cladding : cladding_type,
+  Deconstruction : deconstruction_type,
+  Pigments : pigments,
+  Palette : palette_name
+};
+
+
+// TIMING
 
 var pre_calc = 0.000;
 var viz_update = 0.00000;
 var composer_pass = 0.00000;
 
-///VIEWPORT SETUP///
+
+// VIEWPORT SETUP
 
 var viewport = document.getElementById("viewport");
 var margin_left = 0;
