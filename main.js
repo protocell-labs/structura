@@ -308,10 +308,15 @@ var pigments = gene_pick_key(palette_pigments); // choose pigments at random fro
 var palette_name = gene_pick_key(palette_pigments[pigments]); // choose palette name at random from a palette pigment list
 var palette = palette_pigments[pigments][palette_name].slice(0); // make a copy of the chosen color palette
 shuffleArray(palette); // randomly shuffle the colors in the palette - this way we can keep the order of probabilities the same in the loop below
-var temp_color_background = new THREE.Color(palette[0]);
-var color_target = new THREE.Color(); // temporary container for the background color
-temp_color_background.getHSL(color_target); // copy HSL values into color_target
-var color_background = new THREE.Color().setHSL(color_target.h, color_target.s, background_lightness);
+
+new THREE.Color(palette[0]).getHSL(color_target = new THREE.Color()); // copy HSL values into color_target
+var color_background = new THREE.Color().setHSL(color_target.h, color_target.s / 2.0, background_lightness);
+new THREE.Color(palette[1]).getHSL(color_target = new THREE.Color()); // copy HSL values into color_target
+var color_amorphe = new THREE.Color().setHSL(color_target.h, color_target.s / 2.0, color_target.l);
+new THREE.Color(palette[2]).getHSL(color_target = new THREE.Color()); // copy HSL values into color_target
+var color_frame = new THREE.Color().setHSL(color_target.h, color_target.s, color_target.l);
+new THREE.Color(palette[3]).getHSL(color_target = new THREE.Color()); // copy HSL values into color_target
+var color_cladding = new THREE.Color().setHSL(color_target.h, color_target.s / 2.0, color_target.l);
 
 
 // FRAME COMPOSITION
@@ -456,8 +461,6 @@ if ((composition_type == "detail") || (composition_type == "wall")) {
 }
 
 
-
-
 //////CONSOLE LOG//////
 
 var structura_logo =    "%c                                                                                               \n"
@@ -479,13 +482,13 @@ console.log("Deconstruction ->", deconstruction_type);
 console.log("%cCOLOR", "color: white; background: #000000;");
 console.log("Pigments ->", pigments); // pigments are groups of color palletes
 console.log("Palette ->", palette_name); // palette is where the colors are stored (ordered is shuffled)
-console.log("Background ->\t%c    ", `color: white; background: ${palette[0]};`);
-console.log("Amorphe ->   \t%c    ", `color: white; background: ${palette[1]};`);
-console.log("Frame ->     \t%c    ", `color: white; background: ${palette[2]};`);
-console.log("Cladding ->  \t%c    ", `color: white; background: ${palette[3]};`);
-
+console.log("Background ->\t%c    ", `color: white; background: #${color_background.getHexString()};`);
+console.log("Amorphe ->   \t%c    ", `color: white; background: #${color_amorphe.getHexString()};`);
+console.log("Frame ->     \t%c    ", `color: white; background: #${color_frame.getHexString()};`);
+console.log("Cladding ->  \t%c    ", `color: white; background: #${color_cladding.getHexString()};`);
 
 //////END CONSOLE LOG//////
+
 
 var pre_calc = 0.000;
 var viz_update = 0.00000;
@@ -616,7 +619,7 @@ View.prototype.addSpaceFrame = function () {
     var dummy = new THREE.Object3D()
     var c_type = "standard";
     var geometry = new THREE.CylinderGeometry( cylinder_params[c_type][0], cylinder_params[c_type][1], cylinder_params[c_type][2], cylinder_params[c_type][3], cylinder_params[c_type][4], false ); // capped cylinder
-    var material = new THREE.MeshPhongMaterial( {color: palette[2]} ); //THREE.MeshBasicMaterial( {color: 0xff0000} ); THREE.MeshNormalMaterial();
+    var material = new THREE.MeshPhongMaterial( {color: color_frame} ); //THREE.MeshBasicMaterial( {color: 0xff0000} ); THREE.MeshNormalMaterial();
     
     // LINKS
     var imesh = new THREE.InstancedMesh( geometry, material, gData.links.length )
@@ -676,7 +679,7 @@ View.prototype.addSpaceFrame = function () {
 
     c_type = "square 1x1";
     var cladding_geometry = new THREE.CylinderGeometry( cylinder_params[c_type][0], cylinder_params[c_type][1], cylinder_params[c_type][2], cylinder_params[c_type][3], cylinder_params[c_type][4], false, Math.PI * 0.25 ); // capped cylinder
-    var cladding_material = new THREE.MeshPhongMaterial( {color: palette[3], flatShading: true} );
+    var cladding_material = new THREE.MeshPhongMaterial( {color: color_cladding, flatShading: true} );
     var imesh = new THREE.InstancedMesh( cladding_geometry, cladding_material, gData.cladding.length * cladding_nr );
     var axis = new THREE.Vector3(0, 1, 0);
     imesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
@@ -817,7 +820,7 @@ View.prototype.addRock = function () {
       vec3 norm = normalize(vNormal);
       float nDotL = clamp(dot(lightDirection, norm), 0.0, 0.1);
       float strength = step(nDotL, max(abs(vUv.x - 0.5),abs(vUv.y - 0.5)));
-      vec3 col = vec3(${normCol(palette[1])})*vec3(noise(vPos*4.0)*0.9+0.9);
+      vec3 col = vec3(${normCol(color_amorphe)})*vec3(noise(vPos*4.0)*0.9+0.9);
       gl_FragColor = vec4(col/vec3(line(vUv, vec2(-1.0, 0.0), vec2(0.0,1.0))+strength*2.0), 1.0);//circle(vUv, 0.05+strength)
   }`
 
@@ -948,7 +951,7 @@ function Controller(viewArea) {
   var light_framerate = 50;
   light_framerate_change = 50; // needs to be the same as above
   var base_light_angle = Math.PI/3; // starting angle, angle 0 is straight behind the camera
-  base_light_angle_step = 0.0005; // zero makes the light not travel, before 0.0005 - obscvrvm
+  base_light_angle_step = 0.0000; // zero makes the light not travel, before 0.0005 - obscvrvm
   var light_angle_step;
 
   if (light_source_type == 'west') {
