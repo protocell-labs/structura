@@ -53,8 +53,8 @@ function memcpy(src, srcOffset, dst, dstOffset, length) {
 }
 
 
-//FXHASH random function for specific implimentation
-gene = fxrand;
+// random function for specific implimentation
+gene = prng.rand;
 
 //rand functions for random generator. Assumes generator producing float point between 0 and 1
 function generateRandomInt(min,max){

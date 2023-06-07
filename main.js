@@ -1082,8 +1082,8 @@ function Controller(viewArea) {
     setTimeout(function () {document.querySelector("#loading").style.display = "none";}, min_loading_time - loading_time + 2000);
   }
   
-  // turn this on for fxhash projects
-  //setTimeout(function () {fxpreview();}, min_loading_time+3000);
+  // trigger preview capture on complete render
+  setTimeout(function () {capturePreview();}, min_loading_time+3000);
 
   function onWindowResize() {
     //console.log("resize")
