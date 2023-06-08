@@ -492,15 +492,17 @@ console.log("Cladding ->  \t%c    ", `color: white; background: #${color_claddin
 
 // TOKEN FEATURES
 
-window.$verseFeatures = {
-  Composition : composition_type,
-  Size : total_frame_size_x.toString() + " x " + total_frame_size_y.toString(),
-  Details : detail_type,
-  Cladding : cladding_type,
-  Deconstruction : deconstruction_type,
-  Pigments : pigments,
-  Palette : palette_name
-};
+window.$artifact = {
+  features: {
+    Composition : composition_type,
+    Size : total_frame_size_x.toString() + " x " + total_frame_size_y.toString(),
+    Details : detail_type,
+    Cladding : cladding_type,
+    Deconstruction : deconstruction_type,
+    Pigments : pigments,
+    Palette : palette_name
+  }
+}
 
 
 // TIMING
@@ -1208,7 +1210,7 @@ function verse_capture_thumbnail_start(){
     }
 }
 
-function verse_capture_thumbnail(){
+function verse_capture_thumbnail_stop(){
 
   //End capturer //save and create blob by saving
   setTimeout(() => {
