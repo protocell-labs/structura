@@ -20,6 +20,8 @@ _____/\\\\\\\\\\\_______________________________________________________________
 var gDatas = [];
 var gData;
 
+var machine_param = false;
+
 
 // VIEW AND LIGHT
 
@@ -926,7 +928,12 @@ View.prototype.render = function () {
     if (recording & (captured_frames == gif_frames)) {
       recording = !recording;
       capturer.stop();
-      capturer_custom_save();
+      if (machine_param) {
+        verse_capture_thumbnail_stop();
+      } else {
+        capturer_custom_save();
+      }
+      
       captured_frames = 0;
     }
     //this.renderer.render(this.scene, this.camera); // When no layers are used
@@ -1179,6 +1186,57 @@ function capturer_custom_save() {
       }, 250);
     }, 0);
 }
+
+
+function verse_capture_thumbnail_start(){
+    //settings for thumbnail 
+    gif_frames = 16
+
+    //Start capturer
+    recording = !recording;
+    if(recording){
+      //new capturer instance
+      capturer = new CCapture( {
+        verbose: false,
+        display: false,
+        quality: 99,
+        framerate: 10, // gif_framerate
+        format: 'gif',
+        workersPath: 'js/capture/src/'
+      } );
+    capturer.start();
+    }
+}
+
+function verse_capture_thumbnail(){
+
+  //End capturer //save and create blob by saving
+  setTimeout(() => {
+    capturer.save(function( blob ) {
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onloadend = function () {
+        window.$artifact.preview = reader.result;
+        dispatchEvent(new Event("capture-preview"));
+      };
+    });
+      //setTimeout(() => {
+      //  capturer = null; // set capturer back to null after download
+      //}, 250);
+    }, 0);
+}
+
+try {
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+  machine_param = urlParams.get('machine');
+  if (machine_param) {
+    verse_capture_thumbnail_start()
+  }
+} catch (error) {
+  
+}
+
 
 function check_drawing_buffer(q) {
   const max_side = 5500; // looks like the max buffer for Chrome on desktop is 5760, so we take a bit lower to be safe
