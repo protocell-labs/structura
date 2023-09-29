@@ -14,7 +14,7 @@ _____/\\\\\\\\\\\_______________________________________________________________
                                   S t r u c t u r a  |  o f f i c e  c a  +  { p r o t o c e l l : l a b s }  |  2 0 2 3
 ```
 
-Code for the long-form generative collection on [VERSE](https://verse.works/), an exhibition space for digital artworks. [Structura](https://verse.works/artworks/f1059227-34f7-4887-af29-6f8c79632b16) is part of [Generative Architecture](https://verse.works/exhibitions/generative-architecture) exhibiton. Developed by [office ca](https://verse.works/persons/office-ca) and [{protocell:labs}](https://verse.works/persons/protocell-labs) in June 2023.
+Code for the long-form generative collection on [VERSE](https://verse.works/), an exhibition space for digital artworks.
 
 You can run live generator of the collection with random seeds here:
 - [Structura (generator)](https://protocell-labs.github.io/structura/)
@@ -37,9 +37,15 @@ In the 1960s, German-born American architect Konrad Wachsmann created a series o
 
 In _Structura_, this rational, modular, tectonic (constructed) space frame is contrasted with an amorphous entity residing between physical matter and empty space. Diagrammatic and actual, formed and formless, the amorphous volume pierces the frame to produce unexpected conditions. At times, the volume represents natural rock formations; other times, clouds, vapor, or smoke. Perhaps most accurately, it is a placeholder for flowing space, an idea investigated since at least the Baroque period, reinterpreted in modern times by architects such as Greg Lynn and Zaha Hadid. Here, space itself and its enclosure are superimposed but fully independent, passing through with little regard for each other, z-buffer on the graphics card being the ultimate judge on what is shown first. This superposition creates tension further amplified by the field of spatial disturbance affecting both, seemingly independent but originating from the same algorithmic source, ultimately revealing their purely digital nature.
 
-Controls:
+Key controls:
+- **1-5**: capture current view (**5** is highest quality)
+- **g**: capture gif animation at 10 fps
+- **n**: modify rotation angle size and change number of frames in a gif
+- **a**: rotate scene
+- **l**: rotate light angle
+- **t**: make light travel in circle
+- **i**: get complete list of controls
 
-Capture the current view by pressing numbers (1-5), with (5) being the highest quality image. Alternatively, capture a gif animation at 10 fps by pressing (g). You can change the number of frames in the gif by pressing (n), with each key press doubling the frames. Rotate the scene using (a) and modify the rotation angle size with (n). Rotate the light angle with (l), and make it travel in circle with (t). You can get a complete list of controls by pressing (i).
 _Structura_ is written in JavaScript and GLSL using THREE.js. This collection was tested on multiple browsers, devices and operating systems. Please make sure the token works on your device before minting. For best viewing experience, we recommend Chrome on desktop with a newer generation GPU card and enabled hardware acceleration in your browser.
 
-Created in 2023 by office ca and {protocell:labs}.
+Originally part of [Generative Architecture](https://verse.works/exhibitions/generative-architecture) exhibiton. Developed by [office ca](https://verse.works/persons/office-ca) and [{protocell:labs}](https://verse.works/persons/protocell-labs) in June 2023.
